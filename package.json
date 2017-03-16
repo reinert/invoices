@@ -1,0 +1,26 @@
+{
+  "name": "node-app",
+  "version": "0.0.1",
+  "description": "just a test",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "nodemon src/index.js --exec babel-node",
+    "build": "babel src -d dist",
+    "serve": "node dist/index.js",
+    "test": "mocha --compilers js:babel-register"
+  },
+  "author": "Danilo Reinert",
+  "license": "BSD",
+  "dependencies": {
+    "core-decorators": "^0.15.0",
+    "sequelize": "^3.30.2",
+    "sqlite3": "^3.1.8"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.0",
+    "babel-preset-env": "^1.2.1",
+    "babel-register": "^6.24.0",
+    "mocha": "^3.2.0",
+    "nodemon": "^1.11.0"
+  }
+}
