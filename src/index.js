@@ -5,16 +5,17 @@ console.log(`>> the user: ${user}`)
 
 // force: true will drop the table if it already exists
 User.Repository.sync({force: true}).then((repo) => {
-  //console.log(repo)
   // Table created
-  //return User.Repository.create(user)
   return User.Repository.save(user)
 }).then((user) => {
-  //console.log('>>>>>>>>>>>>>>>')
-  //console.log(user)  
-//  console.log(`user created: ${new User(user)}`)
+  // Entity persisted
   return User.Repository.findById(user.id)
 }).then((user) => {
+  // Entity found by id
   console.log('::: RESULT :::')
   console.log(JSON.stringify(user))
+
+  return User.Repository.findAll()
+}).then((users) => {
+  console.log(JSON.stringify(users))
 }).catch((err) => console.log(err)) 

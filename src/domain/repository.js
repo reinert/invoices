@@ -7,7 +7,7 @@ export default (Model, Entity) => class {
   }
 
   static findAll (options) {
-    return Model.findAll().then((instances) => instances.map((instance) => new Entity(instance)))
+    return Model.findAll().then((instances) => proxy(instances, Entity))
   }
 
   static findById (id, options) {
@@ -21,4 +21,15 @@ export default (Model, Entity) => class {
   static destroy (entity, options) {
     return entity._instance.destroy(options)
   }
+}
+
+export function proxy (arr, Entity) {
+  return new Proxy(arr, {
+    get(target, key, receiver) {
+      if (!isNaN(parseFloat(key)) && isFinite(key)) {
+        target[key] = new Entity(target[key])
+      }
+      return Reflect.get(target, key, receiver)
+    }
+  })
 }
