@@ -6,15 +6,15 @@ export default (Model, Entity) => class Repository {
   }
 
   static findAll (options) {
-    return Model.findAll().then((instances) => Repository._proxyArray(instances))
+    return Model.findAll().then((instances) => instances ? Repository._proxyArray(instances) : instances)
   }
 
   static findById (id, options) {
-    return Model.findById(id, options).then((instance) => new Entity(instance))
+    return Model.findById(id, options).then((instance) => instance ? new Entity(instance) : instance)
   }
 
   static save (entity, options) {
-    return entity._instance.save(options).then((instance) => new Entity(instance))
+    return entity._instance.save(options).then((instance) => instance ? new Entity(instance) : instance)
   }
 
   static destroy (entity, options) {

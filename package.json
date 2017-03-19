@@ -12,7 +12,9 @@
   "author": "Danilo Reinert",
   "license": "BSD",
   "dependencies": {
+    "body-parser": "^1.17.1",
     "core-decorators": "^0.15.0",
+    "express": "^4.15.2",
     "sequelize": "^3.30.2",
     "sqlite3": "^3.1.8"
   },
