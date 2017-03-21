@@ -1,14 +1,11 @@
 import { UserModel } from '../persistence'
-import Base from './base'
+import Entity from './entity'
 import Repository from './repository'
 
-export default class User extends Base {
+export default class User extends Entity {
   constructor () {
     super(UserModel, ...arguments)
     
-    super.$('id', { set: false })
-    super.$('createdAt', { set: false })
-    super.$('updatedAt', { set: false })
     super.$('username')
     super.$('password')
     super.$('email')
@@ -19,4 +16,4 @@ export default class User extends Base {
   toString () { return `User: { id: ${this.id}, username: ${this.username}, email: ${this.email} }` }
 }
 
-class UserRepository extends Repository(UserModel, User) { }
+class UserRepository extends Repository(UserModel, User) {}

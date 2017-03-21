@@ -13,9 +13,17 @@ export default (Model, Entity) => class Repository {
     return Model.findById(id, options).then((instance) => instance ? new Entity(instance) : instance)
   }
 
+  static exists (id, options) {
+    return Model.count({ where: { id: id } }).then((result) => result ? true : false)
+  }
+
   static save (entity, options) {
     return entity._instance.save(options).then((instance) => instance ? new Entity(instance) : instance)
   }
+
+//  static update (entity, options) {
+//    return Model.update(entity, { where: { id: entity.id } }).then((result) => result[0] ? (result[1] ? new Entity(result[1][0]) : entity) : null})
+//  }
 
   static destroy (entity, options) {
     return entity._instance.destroy(options)
@@ -35,4 +43,3 @@ export default (Model, Entity) => class Repository {
     })
   }
 }
-

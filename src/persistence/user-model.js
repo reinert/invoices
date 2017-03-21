@@ -1,7 +1,7 @@
 import Sequelize from 'sequelize'
-import { modelFactory } from './datasource'
+import datasource from './datasource'
 
-export default modelFactory.define('user', {
+export default datasource.define('user', {
   username: {
     type: Sequelize.STRING,
     allowNull: false
@@ -13,7 +13,7 @@ export default modelFactory.define('user', {
   email: {
     type: Sequelize.STRING,
     validate: {
-      isEmail: true
+      isEmail: { msg: 'not a valid email' }
     }
   }  
 })
