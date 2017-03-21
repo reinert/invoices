@@ -16,10 +16,7 @@ export default express.Router()
       .catch(next)
   })
   .get('/:id([0-9]+)', lookup, (req, res, next) => {
-    User.Repository.findById(req.params.id)
-      .then((user) => log(user))
-      .then((user) => user == null ? res.sendStatus(404) : res.json(user))
-      .catch(next)
+    res.json(req.entity)
   })
   .patch('/:id([0-9]+)', lookup, (req, res, next) => {
     User.Repository.save(req.entity.merge(req.body))
