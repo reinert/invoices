@@ -1,3 +1,4 @@
+import { override } from 'core-decorators';
 import { User } from '../domain'
 import HeaderValidationError from './header-validation-error'
 import Resource from './resource'
@@ -5,10 +6,6 @@ import Resource from './resource'
 const B64_REGEX = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/
 
 class UserResource extends Resource(User) {
-  static bind (router) {
-    return super.bind(router.use(this.retrievePassword))
-  }
-
   static retrievePassword (req, res, next) {
     let b64Password = req.get('hash')
 
@@ -24,6 +21,12 @@ class UserResource extends Resource(User) {
     return next()
   }
 
+  @override
+  static bind (router) {
+    return super.bind(router.use(this.retrievePassword))
+  }
+
+  @override
   static create (req, res, next) {
     if (!req.password) {
       return next(new HeaderValidationError('hash', 'Hash must be informed'))
@@ -36,6 +39,7 @@ class UserResource extends Resource(User) {
       .catch(next)
   }
 
+  @override
   static patch (req, res, next) {
     req.entity.merge(req.body)
 

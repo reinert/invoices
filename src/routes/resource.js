@@ -1,6 +1,6 @@
 import express from 'express'
 
-export default (Entity) => class {
+export default (Entity) => class Resource {
   static get ID_PARAM () { return 'id' }
   static get ID_PATH () { return`/:${this.ID_PARAM}([0-9]+)` }
 
