@@ -30,6 +30,12 @@ export default class Entity {
       configurable: false
     })
 
+    Object.defineProperty(this, 'isNewRecord', {
+      get: () => this._instance.isNewRecord,
+      enumerable: false,
+      configurable: false
+    })
+
     Object.defineProperty(this, 'id', {
       get: () => this._instance.get('id'),
       enumerable: true,
@@ -52,22 +58,34 @@ export default class Entity {
   $ (property, descriptor) {
     Object.defineProperty(this, property, processDescriptor(property, descriptor))
     if (descriptor) {
-      if (!descriptor.computed) this._writables[property] = true
+      if (!descriptor.computed && descriptor.set !== false) this._writables[property] = true
     } else {
       this._writables[property] = true
     }
   }
 
+  _get (property) {
+    return this._instance.get(property)
+  }
+
+  _set (property, value) {
+    this._instance.set(property, value)
+  }
+
   merge (values) {
-    for (let p in values) {
-      if (this._writables[p]) this[p] = values[p]
+    if (values) {
+      for (let p in values) {
+        if (this._writables[p]) this[p] = values[p]
+      }
     }
     return this
   }
 
   update (values) {
-    for (let p in this._writables) {
-      this[p] = (values[p] === undefined) ? null : values[p]
+    if (values) {
+      for (let p in this._writables) {
+        this[p] = (values[p] === undefined) ? null : values[p]
+      }
     }
     return this
   }
@@ -78,20 +96,19 @@ function processDescriptor (property, descriptor) {
     enumerable: true, 
     configurable: true, 
     get: function () { return this._instance.get(property) },
-    set: function (value) { return this._instance.set(property, value) }
+    set: function (value) { this._instance.set(property, value) }
   }
 
   if (descriptor) {
     if (descriptor.hasOwnProperty('enumerable')) d.enumerable = descriptor.enumerable
     if (descriptor.hasOwnProperty('configurable')) d.configurable = descriptor.configurable
-    if (descriptor.hasOwnProperty('value')) d.value = descriptor.value
 
     if (descriptor.hasOwnProperty('get')) {  
       if (descriptor.get === false) { delete d.get } else { d.get = descriptor.get }
     }
 
     if (descriptor.hasOwnProperty('set')) {
-      if (descriptor.set === false) { delete d.set } else { d.set = descriptor.set }
+      if (descriptor.set === false || descriptor.computed) { delete d.set } else { d.set = descriptor.set }
     }
   }
 

@@ -1,5 +1,49 @@
-import express from 'express'
 import { User } from '../domain'
-import resource from './resource'
+import HeaderValidationError from './header-validation-error'
+import Resource from './resource'
 
-export default resource(User, '/users')
+const B64_REGEX = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/
+
+class UserResource extends Resource(User) {
+  static bind (router) {
+    return super.bind(router.use(this.retrievePassword))
+  }
+
+  static retrievePassword (req, res, next) {
+    let b64Password = req.get('hash')
+
+    if (b64Password) {
+      try {
+        if (!B64_REGEX.test(b64Password)) throw new TypeError('Not a base64 string')
+        req.password = Buffer.from(b64Password, 'base64').toString()
+      } catch (err) {
+        return next(new HeaderValidationError('hash', 'Invalid hash format. Are you sure it is base64 encoded?'), err)
+      }
+    }
+
+    return next()
+  }
+
+  static create (req, res, next) {
+    if (!req.password) {
+      return next(new HeaderValidationError('hash', 'Hash must be informed'))
+    }
+
+    let user = new User(req.body)
+    user.setPassword(req.password)
+      .then((user) => User.Repository.save(user))
+      .then((user) => res.status(201).location(`${req.baseUrl}/${user.id}`).json(user))
+      .catch(next)
+  }
+
+  static patch (req, res, next) {
+    req.entity.merge(req.body)
+
+    return (req.password ? req.entity.setPassword(req.password) : Promise.resolve(req.entity))
+      .then((user) => User.Repository.save(user))
+      .then((user) => res.json(user))
+      .catch(next)
+  }
+}
+
+export default UserResource.getRouter('/users')

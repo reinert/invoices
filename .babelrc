@@ -1,3 +1,10 @@
 {
-  "presets": ["env"]
+  "presets": ["env"],
+  "plugins": [
+//    "transform-decorators",
+//    "transform-decorators-legacy",
+    ["babel-plugin-transform-builtin-extend", {
+      "globals": ["Error", "Array"]
+    }]
+  ]
 }
