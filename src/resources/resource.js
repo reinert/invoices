@@ -4,11 +4,8 @@ export default (Entity) => class Resource {
   static get ID_PARAM () { return 'id' }
   static get ID_PATH () { return`/:${this.ID_PARAM}([0-9]+)` }
 
-  static getRouter (route) {
-    let router = express.Router()
-    this.bind(router)
-    router.route = route
-    return router
+  static getRouter () {
+    return this.bind(express.Router())
   }
   
   static bind (router) {
@@ -17,7 +14,7 @@ export default (Entity) => class Resource {
       .get('/', this.getAll)
       .post('/', this.create)
       .get(this.ID_PATH, this.getOne)
-      .patch(this.ID_PATH, this.patch)
+      .patch(this.ID_PATH, this.merge)
       .put(this.ID_PATH, this.update)
       .delete(this.ID_PATH, this.delete)
   }
@@ -51,7 +48,7 @@ export default (Entity) => class Resource {
     res.json(req.entity)
   }
 
-  static patch (req, res, next) {
+  static merge (req, res, next) {
     Entity.Repository.save(req.entity.merge(req.body))
       .then((entity) => res.json(entity))
       .catch(next)

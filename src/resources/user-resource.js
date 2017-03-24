@@ -5,7 +5,7 @@ import Resource from './resource'
 
 const B64_REGEX = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/
 
-class UserResource extends Resource(User) {
+export default class UserResource extends Resource(User) {
   static retrievePassword (req, res, next) {
     let b64Password = req.get('hash')
 
@@ -40,7 +40,7 @@ class UserResource extends Resource(User) {
   }
 
   @override
-  static patch (req, res, next) {
+  static merge (req, res, next) {
     req.entity.merge(req.body)
 
     return (req.password ? req.entity.setPassword(req.password) : Promise.resolve(req.entity))
@@ -49,5 +49,3 @@ class UserResource extends Resource(User) {
       .catch(next)
   }
 }
-
-export default UserResource.getRouter('/users')
