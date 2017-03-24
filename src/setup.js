@@ -1,9 +1,7 @@
 import { datasource } from './persistence'
 import { User } from './domain'
 
-const env = process.env.NODE_ENV || 'development'
-
-switch (env) {
+switch (process.env.NODE_ENV) {
   case 'development':
     datasource.sync({force: true})
       .then(() => new User({username: 'john', email: 'john@bar.com'}).setPassword('123456'))
@@ -16,15 +14,15 @@ switch (env) {
       })
     break
   case 'test':
-    console.log('Not yet implemented!')
+    console.error('Test environment not yet implemented!')
     process.exit(0)
     break
   case 'production':
-    console.log('Not yet implemented!')
+    console.log('Production environment not yet implemented!')
     process.exit(0)
     break
   default:
-    console.log('NODE_ENV not set.')
+    console.log('Invalid environment:', process.env.NODE_ENV)
     process.exit(1)
 }
 

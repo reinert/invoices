@@ -1,14 +1,13 @@
+import './setup'
+
 import express from 'express'
 import morgan from 'morgan'
 import bodyParser from 'body-parser'
 import { users } from './routes'
 import { sequelizeValidationErrorHandler, headerValidationErrorHandler, uncaughtErrorHandler } from './error-handlers'
-import './setup'
 
-const env = process.env.NODE_ENV || 'development'
-
-const app = express()
-  .use(morgan(env === 'development' ? 'dev' : 'combined'))
+express()
+  .use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
   .use(bodyParser.json({ type: 'application/json' }))
   .use(users.route, users)
   .use(sequelizeValidationErrorHandler)
