@@ -37,7 +37,7 @@ export default (Entity) => class Resource {
 
   static getAll (req, res, next) {
     Entity.Repository.findAll()
-      .then((entity) => res.json(entity))
+      .then((entities) => res.json(entities))
       .catch(next)
   }
 
