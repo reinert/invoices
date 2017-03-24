@@ -1,15 +1,12 @@
 import Sequelize from 'sequelize'
+import config from '../../config/datasource'
 
-export default new Sequelize('temp', 'postgres', 'postgres', {
-  host: 'localhost',
-  //host: '127.0.0.1',
-  //port: 5432,
-  //dialect: 'postgres',
-  pool: {
-    max: 5,
-    min: 0,
-    idle: 10000
-  },
-  dialect: 'sqlite'
-  //storage: `${__dirname}/data/temp.sqlite`
+const env = process.env.NODE_ENV || 'development'
+const conn = config[env]
+
+export default new Sequelize(conn.database, conn.username, conn.password, {
+  dialect: conn.dialect,
+  host: conn.host,
+  port: conn.port,
+  pool: conn.pool
 })

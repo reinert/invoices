@@ -65,7 +65,7 @@ export default (Entity) => class Resource {
 
   static delete (req, res, next) {
     Entity.Repository.destroy(req.entity)
-      .then(() => res.sendStatus(200))
+      .then(() => res.sendStatus(204))
       .catch(next)
   }
 }
