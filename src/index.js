@@ -3,7 +3,7 @@ import morgan from 'morgan'
 import bodyParser from 'body-parser'
 import { users } from './routes'
 import { sequelizeValidationErrorHandler, headerValidationErrorHandler, uncaughtErrorHandler } from './error-handlers'
-import './pre-start'
+import './setup'
 
 const env = process.env.NODE_ENV || 'development'
 
