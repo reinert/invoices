@@ -1,4 +1,4 @@
-import AbstractError from '../abstract-error'
+import AbstractError from '../../abstract-error'
 
 export default class HeaderValidationError extends AbstractError {
   constructor (header, message, cause) {

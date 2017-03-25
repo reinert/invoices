@@ -1,6 +1,6 @@
 import { override } from 'core-decorators';
 import { User } from '../domain'
-import HeaderValidationError from './header-validation-error'
+import HeaderValidationError from './errors/header-validation-error'
 import Resource from './resource'
 
 const B64_REGEX = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/

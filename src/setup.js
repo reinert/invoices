@@ -25,5 +25,3 @@ switch (process.env.NODE_ENV) {
     console.log('Invalid environment:', process.env.NODE_ENV)
     process.exit(1)
 }
-
-
