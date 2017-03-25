@@ -6,11 +6,11 @@ export default (Model, Entity) => class Repository {
   }
 
   static findAll (options) {
-    return Model.findAll().then((instances) => instances ? Repository._proxyArray(instances) : instances)
+    return Model.findAll().then((instances) => instances ? Repository._proxyArray(instances) : null)
   }
 
   static findById (id, options) {
-    return Model.findById(id, options).then((instance) => instance ? new Entity(instance) : instance)
+    return Model.findById(id, options).then((instance) => instance ? new Entity(instance) : null)
   }
 
   static exists (id, options) {
@@ -18,7 +18,7 @@ export default (Model, Entity) => class Repository {
   }
 
   static save (entity, options) {
-    return entity._instance.save(options).then((instance) => instance ? new Entity(instance) : instance)
+    return entity._instance.save(options).then((instance) => instance ? new Entity(instance) : null)
   }
 
 //  static update (entity, options) {
