@@ -5,7 +5,7 @@ export default class Entity {
   constructor (values) {
     this._defineProperties()
 
-    let instance = (values instanceof Sequelize.Instance) ? values : this.Model.build(this._sanitize(values))
+    const instance = (values instanceof Sequelize.Instance) ? values : this.Model.build(this._sanitize(values))
 
     Object.defineProperty(this, '_instance', {
       value: instance,
@@ -42,8 +42,9 @@ export default class Entity {
     }
 
     this.prototype._propertyDescriptors[property] = d
-    Object.defineProperty(this.prototype, d.accessor, d)
   }
+
+  static get Repository () { throw new NotImplementedError('Repository static getter must be overridden by subclasses.') }
 
   get Model () { throw new NotImplementedError('Model getter must be overridden by subclasses.') }
 

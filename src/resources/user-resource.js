@@ -1,4 +1,4 @@
-import { override } from 'core-decorators';
+import { override } from 'core-decorators'
 import { User } from '../domain'
 import HeaderValidationError from './errors/header-validation-error'
 import Resource from './resource'

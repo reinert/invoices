@@ -1,3 +1,4 @@
+import { override } from 'core-decorators'
 import bcrypt from 'bcrypt'
 import { UserModel } from '../persistence'
 import Entity from './entity'
@@ -10,8 +11,10 @@ export default class User extends Entity {
     super(values)
   }
 
+  @override
   static get Repository () { return UserRepository }
 
+  @override
   get Model () { return UserModel }
 
   setPassword (plainPassword) {
