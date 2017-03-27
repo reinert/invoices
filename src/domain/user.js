@@ -6,39 +6,35 @@ import Repository from './repository'
 const SALT_ROUNDS = 13
 
 export default class User extends Entity {
-  constructor () {
-    super(UserModel, ...sanitizeArgs(arguments))
-    
-    super.$('username')
-    super.$('email')
+  constructor (values) {
+    super(values)
   }
 
   static get Repository () { return UserRepository }
 
+  get Model () { return UserModel }
+
   setPassword (plainPassword) {
     return bcrypt.hash(plainPassword, SALT_ROUNDS)
         .then((hash) => {
-          this._set('password', hash)
-          this._set('isEncrypted', true)
+          this._password = hash
+          this._isEncrypted = true
           return this
         })
   }
 
   comparePassword (plainPassword) {
-    return this._get('isEncrypted') ?
-      bcrypt.compare(plainPassword, this._get('password')) :
+    return this._isEncrypted ?
+      bcrypt.compare(plainPassword, this._password) :
       Promise.reject(new Error('Password not encrypted yet'))
   }
 
   toString () { return `User: { id: ${this.id}, username: ${this.username}, email: ${this.email} }` }
 }
 
-class UserRepository extends Repository(UserModel, User) { }
+User.$('username')
+User.$('email')
+User.$('password', { private: true })
+User.$('isEncrypted', { private: true })
 
-function sanitizeArgs(args) {
-  if (args[0]) {
-    delete args[0].password
-    delete args[0].isEncrypted
-  }
-  return args
-}
+class UserRepository extends Repository(UserModel, User) { }

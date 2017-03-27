@@ -1,66 +1,56 @@
 import Sequelize from 'sequelize'
+import NotImplementedError from './errors/not-implemented-error'
 
 export default class Entity {
-  constructor () {
-    let model;
-    if (arguments.length > 1 && arguments[1] instanceof Sequelize.Instance) {
-      model = arguments[1]
-    } else {
-      model = arguments[0].build(arguments[1])
-    }
+  constructor (values) {
+    this._defineProperties()
+
+    let instance = (values instanceof Sequelize.Instance) ? values : this.Model.build(this._sanitize(values))
 
     Object.defineProperty(this, '_instance', {
-      value: model,
+      value: instance,
       enumerable: false,
       writable: false,
-      configurable: false
-    })
-
-    Object.defineProperty(this, '_Model', {
-      value: arguments[0],
-      enumerable: false,
-      writable: false,
-      configurable: false
-    })
-
-    Object.defineProperty(this, '_writables', {
-      value: {},
-      enumerable: false,
-      writable: false,
-      configurable: false
-    })
-
-    Object.defineProperty(this, 'isNewRecord', {
-      get: () => this._instance.isNewRecord,
-      enumerable: false,
-      configurable: false
-    })
-
-    Object.defineProperty(this, 'id', {
-      get: () => this._instance.get('id'),
-      enumerable: true,
-      configurable: false
-    })
-
-    Object.defineProperty(this, 'createdAt', {
-      get: () => this._instance.get('createdAt'),
-      enumerable: true,
-      configurable: false
-    })
-
-    Object.defineProperty(this, 'updatedAt', {
-      get: () => this._instance.get('updatedAt'),
-      enumerable: true,
       configurable: false
     })
   }
 
-  $ (property, descriptor) {
-    Object.defineProperty(this, property, processDescriptor(property, descriptor))
+  static $ (property, descriptor) {
+    this._processDescriptor(property, descriptor)
+  }
+
+  static _processDescriptor (property, descriptor) {
+    this.prototype._descriptors[property] = descriptor ? descriptor : {}
+
+    const d = {
+      accessor: property,
+      enumerable: true,
+      configurable: true,
+      get: function () { return this._instance.get(property) },
+      set: function (value) { this._instance.set(property, value) }
+    }
+
     if (descriptor) {
-      if (!descriptor.computed && descriptor.set !== false) this._writables[property] = true
-    } else {
-      this._writables[property] = true
+      if (descriptor.private) {
+        d.enumerable = false
+        d.accessor = ensureUnderscore(property)
+      }
+
+      if (descriptor.readOnly) {
+        delete d.set
+      }
+    }
+
+    this.prototype._propertyDescriptors[property] = d
+    Object.defineProperty(this.prototype, d.accessor, d)
+  }
+
+  get Model () { throw new NotImplementedError('Model getter must be overridden by subclasses.') }
+
+  _defineProperties () {
+    for (let p in this._descriptors) {
+      let descriptor = this._propertyDescriptors[p]
+      Object.defineProperty(this, descriptor.accessor, descriptor)
     }
   }
 
@@ -68,14 +58,31 @@ export default class Entity {
     return this._instance.get(property)
   }
 
-  _set (property, value) {
-    this._instance.set(property, value)
+  _set (property, value, force) {
+    if (this._descriptors.hasOwnProperty(property)) {
+      if (this._descriptors[property].readOnly ? force : true) {
+        this._instance.set(property, value)
+        return true
+      }
+    }
+    return false
+  }
+
+  _sanitize(values) {
+    if (values) {
+      for (let p in values) {
+        if (this._descriptors[p] && this._descriptors[p].private)
+          delete values[p]
+      }
+    }
+    return values
   }
 
   merge (values) {
     if (values) {
       for (let p in values) {
-        if (this._writables[p]) this[p] = values[p]
+        if (this._descriptors[p] && !this._descriptors[p].private)
+          this._set(p, values[p])
       }
     }
     return this
@@ -83,34 +90,33 @@ export default class Entity {
 
   update (values) {
     if (values) {
-      for (let p in this._writables) {
-        this[p] = (values[p] === undefined) ? null : values[p]
+      for (let p in this._descriptors) {
+        if (!this._descriptors[p].private)
+          this._set(p, values.hasOwnProperty(p) ? values[p] : null)
       }
     }
     return this
   }
 }
 
-function processDescriptor (property, descriptor) {
-  const d = { 
-    enumerable: true, 
-    configurable: true, 
-    get: function () { return this._instance.get(property) },
-    set: function (value) { this._instance.set(property, value) }
-  }
+Object.defineProperty(Entity.prototype, '_descriptors', {
+  value: {},
+  enumerable: false,
+  configurable: false,
+  writable: false
+})
 
-  if (descriptor) {
-    if (descriptor.hasOwnProperty('enumerable')) d.enumerable = descriptor.enumerable
-    if (descriptor.hasOwnProperty('configurable')) d.configurable = descriptor.configurable
+Object.defineProperty(Entity.prototype, '_propertyDescriptors', {
+  value: {},
+  enumerable: false,
+  configurable: false,
+  writable: false
+})
 
-    if (descriptor.hasOwnProperty('get')) {  
-      if (descriptor.get === false) { delete d.get } else { d.get = descriptor.get }
-    }
+Entity.$('id', { readOnly: true })
+Entity.$('createdAt', { readOnly: true })
+Entity.$('updatedAt', { readOnly: true })
 
-    if (descriptor.hasOwnProperty('set')) {
-      if (descriptor.set === false || descriptor.computed) { delete d.set } else { d.set = descriptor.set }
-    }
-  }
-
-  return d
+function ensureUnderscore(str) {
+  return (str && str[0] !== '_') ? '_' + str : str
 }
