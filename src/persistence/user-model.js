@@ -9,7 +9,7 @@ export default datasource.define('user', {
   email: {
     type: Sequelize.STRING,
     validate: {
-      isEmail: { msg: 'not a valid email' }
+      isEmail: { msg: 'Not a valid email' }
     }
   },
   password: {
