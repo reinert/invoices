@@ -7,10 +7,6 @@ import Repository from './repository'
 const SALT_ROUNDS = 13
 
 export default class User extends Entity {
-  constructor (values) {
-    super(values)
-  }
-
   @override
   static get Repository () { return UserRepository }
 
@@ -27,9 +23,9 @@ export default class User extends Entity {
   }
 
   comparePassword (plainPassword) {
-    return this._isEncrypted ?
-      bcrypt.compare(plainPassword, this._password) :
-      Promise.reject(new Error('Password not encrypted yet'))
+    return this._isEncrypted
+      ? bcrypt.compare(plainPassword, this._password)
+      : Promise.reject(new Error('Password not encrypted yet'))
   }
 
   toString () { return `User: { id: ${this.id}, username: ${this.username}, email: ${this.email} }` }
