@@ -1,4 +1,4 @@
-export default (Model, Entity) => class Repository {  
+export default (Model, Entity) => class Repository {
   static sync (options) {
     return Model.sync(options).then(() => this)
   }
@@ -12,7 +12,7 @@ export default (Model, Entity) => class Repository {
   }
 
   static exists (id, options) {
-    return Model.count({ where: { id: id } }).then((result) => result ? true : false)
+    return Model.count({ where: { id: id } }).then((result) => !!result)
   }
 
   static save (entity, options) {
@@ -29,7 +29,7 @@ export default (Model, Entity) => class Repository {
 
   static _proxyArray (arr) {
     return new Proxy(arr, {
-      get(target, key, receiver) {
+      get (target, key, receiver) {
         if (!isNaN(parseFloat(key)) && isFinite(key)) {
           if (target[key] instanceof Model.Instance) {
             target[key] = new Entity(target[key])

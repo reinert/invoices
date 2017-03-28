@@ -21,7 +21,7 @@ export default datasource.define('user', {
       }
     }
   },
-  isEncrypted : {
+  isEncrypted: {
     type: Sequelize.BOOLEAN,
     allowNull: false,
     defaultValue: false,

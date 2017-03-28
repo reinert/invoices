@@ -1,3 +1,4 @@
+/* global describe beforeEach it */
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import User from '../../src/domain/user'

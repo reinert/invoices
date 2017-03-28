@@ -2,12 +2,12 @@ import express from 'express'
 
 export default (Entity) => class Resource {
   static get ID_PARAM () { return 'id' }
-  static get ID_PATH () { return`/:${this.ID_PARAM}([0-9]+)` }
+  static get ID_PATH () { return `/:${this.ID_PARAM}([0-9]+)` }
 
   static getRouter () {
     return this.bind(express.Router())
   }
-  
+
   static bind (router) {
     return router
       .param(this.ID_PARAM, this.retrieveEntity)

@@ -20,7 +20,7 @@ export default class Entity {
   }
 
   static _processDescriptor (property, descriptor) {
-    this.prototype._descriptors[property] = descriptor ? descriptor : {}
+    this.prototype._descriptors[property] = descriptor || {}
 
     const d = {
       accessor: property,
@@ -69,11 +69,12 @@ export default class Entity {
     return false
   }
 
-  _sanitize(values) {
+  _sanitize (values) {
     if (values) {
       for (let p in values) {
-        if (this._descriptors[p] && this._descriptors[p].private)
+        if (this._descriptors[p] && this._descriptors[p].private) {
           delete values[p]
+        }
       }
     }
     return values
@@ -82,8 +83,9 @@ export default class Entity {
   merge (values) {
     if (values) {
       for (let p in values) {
-        if (this._descriptors[p] && !this._descriptors[p].private)
+        if (this._descriptors[p] && !this._descriptors[p].private) {
           this._set(p, values[p])
+        }
       }
     }
     return this
@@ -92,8 +94,9 @@ export default class Entity {
   update (values) {
     if (values) {
       for (let p in this._descriptors) {
-        if (!this._descriptors[p].private)
+        if (!this._descriptors[p].private) {
           this._set(p, values.hasOwnProperty(p) ? values[p] : null)
+        }
       }
     }
     return this
@@ -118,6 +121,6 @@ Entity.$('id', { readOnly: true })
 Entity.$('createdAt', { readOnly: true })
 Entity.$('updatedAt', { readOnly: true })
 
-function ensureUnderscore(str) {
+function ensureUnderscore (str) {
   return (str && str[0] !== '_') ? '_' + str : str
 }
