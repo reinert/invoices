@@ -1,8 +1,6 @@
 export default (Model, Entity) => class Repository {  
-  static get Model () { return Model }
-  
-  static sync () {
-    return Model.sync().then(() => this)
+  static sync (options) {
+    return Model.sync(options).then(() => this)
   }
 
   static findAll (options) {
