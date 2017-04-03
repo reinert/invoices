@@ -1,5 +1,6 @@
 import { override } from 'core-decorators'
-import { User } from '../domain'
+import { User } from '../core'
+import { Repository } from '../sequelize'
 import HeaderValidationError from './errors/header-validation-error'
 import Resource from './resource'
 
@@ -34,7 +35,7 @@ export default class UserResource extends Resource(User) {
 
     let user = new User(req.body)
     user.setPassword(req.password)
-      .then((user) => User.Repository.save(user))
+      .then((user) => Repository.save(user))
       .then((user) => res.status(201).location(`${req.baseUrl}/${user.id}`).json(user))
       .catch(next)
   }
@@ -44,7 +45,7 @@ export default class UserResource extends Resource(User) {
     req.entity.merge(req.body)
 
     return (req.password ? req.entity.setPassword(req.password) : Promise.resolve(req.entity))
-      .then((user) => User.Repository.save(user))
+      .then((user) => Repository.save(user))
       .then((user) => res.json(user))
       .catch(next)
   }

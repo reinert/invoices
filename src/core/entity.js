@@ -1,5 +1,4 @@
 import Sequelize from 'sequelize'
-import NotImplementedError from './errors/not-implemented-error'
 
 export default class Entity {
   constructor (values) {
@@ -43,10 +42,6 @@ export default class Entity {
 
     this.prototype._propertyDescriptors[property] = d
   }
-
-  static get Repository () { throw new NotImplementedError('Repository static getter must be overridden by subclasses.') }
-
-  get Model () { throw new NotImplementedError('Model getter must be overridden by subclasses.') }
 
   _defineProperties () {
     for (let p in this._descriptors) {
@@ -100,6 +95,10 @@ export default class Entity {
       }
     }
     return this
+  }
+
+  validate () {
+    return true
   }
 }
 
