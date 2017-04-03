@@ -1,7 +1,7 @@
 import express from 'express'
-import { Repository } from '../sequelize'
+import { Repository } from '../../sequelize'
 
-export default (Entity) => class Resource {
+export default (Entity) => class EntityHandler {
   static get ID_PARAM () { return 'id' }
   static get ID_PATH () { return `/:${this.ID_PARAM}([0-9]+)` }
 
