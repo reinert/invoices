@@ -4,7 +4,7 @@ export default class Entity {
   constructor (values) {
     this._defineProperties()
 
-    const holder = (isHolder(values)) ? values : new Holder(this._sanitize(values))
+    const holder = isHolder(values) ? values : new Holder(this._sanitize(values))
 
     Object.defineProperty(this, '_holder', {
       value: holder,
