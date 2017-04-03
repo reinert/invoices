@@ -12,4 +12,8 @@ export default class Repository {
   static destroy (entity, options) {
     throw new NotImplementedError()
   }
+
+  static sync (options) {
+    throw new NotImplementedError()
+  }
 }

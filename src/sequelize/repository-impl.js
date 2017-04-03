@@ -1,6 +1,7 @@
 import { override } from 'core-decorators'
 import Sequelize from 'sequelize'
 import { Repository, Holder } from '../core'
+import datasource from './datasource'
 import EntityModelMap from './entity-model-map'
 
 export default class RepositoryImpl extends Repository {
@@ -19,6 +20,11 @@ export default class RepositoryImpl extends Repository {
   @override
   static destroy (entity, options) {
     return ensureInstance(entity)._holder.destroy(options)
+  }
+
+  @override
+  static sync (options) {
+    return datasource.sync(options)
   }
 }
 

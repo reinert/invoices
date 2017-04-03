@@ -1,9 +1,9 @@
-import { datasource, Repository } from './sequelize'
+import { Repository } from './sequelize'
 import { User } from './core'
 
 switch (process.env.NODE_ENV) {
   case 'development':
-    datasource.sync({force: true})
+    Repository.sync({force: true})
       .then(() => new User({username: 'john', email: 'john@bar.com'}).setPassword('123456'))
       .then((user) => Repository.save(user))
       .then(() => console.log('Development setup done!'))
