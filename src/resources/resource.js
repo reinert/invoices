@@ -1,5 +1,5 @@
 import express from 'express'
-import { Repository } from '../core'
+import { Repository } from '../sequelize'
 
 export default (Entity) => class Resource {
   static get ID_PARAM () { return 'id' }

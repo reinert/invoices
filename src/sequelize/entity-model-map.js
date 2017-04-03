@@ -1,10 +1,10 @@
+import { NonexistentEntityError } from '../core/errors'
 import { User } from '../core'
-import { NonexistentEntityError } from './erros/nonexistent-entity-error'
-import { UserModel } from './user-model'
+import UserModel from './user-model'
 
 export default class EntityModelMap {
-  static getModel(Entity) {
-    if (Entity === User || Entity instanceof User) return UserModel
+  static getModel (Entity) {
+    if (Entity === User) return UserModel
     throw new NonexistentEntityError()
   }
 }

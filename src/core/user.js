@@ -1,8 +1,5 @@
-import { override } from 'core-decorators'
 import bcrypt from 'bcrypt'
-import { UserModel } from '../persistence'
 import Entity from './entity'
-import Repository from './repository'
 
 const SALT_ROUNDS = 13
 

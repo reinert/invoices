@@ -1,18 +1,24 @@
+import { override } from 'core-decorators'
 import Sequelize from 'sequelize'
-import { Repository } from '../core'
-import { EntityModelMap } from './entity-model-map'
+import { Repository, Holder } from '../core'
+import EntityModelMap from './entity-model-map'
 
 export default class RepositoryImpl extends Repository {
+  @override
   static find (Entity, options) {
-    return EntityModelMap.getModel(Entity).findAll().then((instances) => instances ? proxyArray(Entity, instances) : null)
+    return options != null && options.hasOwnProperty('id')
+      ? getModel(Entity).findById(options.id, options).then((instance) => instance ? new Entity(instance) : null)
+      : getModel(Entity).findAll(options).then((instances) => instances ? proxyArray(Entity, instances) : null)
   }
 
+  @override
   static save (entity, options) {
-    return entity._instance.save(options).then((instance) => instance ? new Entity(instance) : null)
+    return ensureInstance(entity)._holder.save(options).then((instance) => instance ? new entity.constructor(instance) : null)
   }
 
+  @override
   static destroy (entity, options) {
-    return entity._instance.destroy(options)
+    return ensureInstance(entity)._holder.destroy(options)
   }
 }
 
@@ -28,4 +34,15 @@ function proxyArray (Entity, arr) {
       return Reflect.get(target, key, receiver)
     }
   })
+}
+
+function getModel (Entity) {
+  return EntityModelMap.getModel(Entity)
+}
+
+function ensureInstance (entity) {
+  if (entity._holder instanceof Holder) {
+    entity._holder = getModel(entity.constructor).build(entity._holder._values)
+  }
+  return entity
 }
