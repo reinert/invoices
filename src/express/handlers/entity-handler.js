@@ -1,26 +1,6 @@
-import express from 'express'
 import { Repository } from '../../sequelize'
 
-export default (Entity, route) => class EntityHandler {
-  static get ROUTE () { return route }
-  static get ID_PARAM () { return 'id' }
-  static get ID_PATH () { return `/:${this.ID_PARAM}([0-9]+)` }
-
-  static getRouter () {
-    return this.bind(express.Router())
-  }
-
-  static bind (router) {
-    return router
-      .param(this.ID_PARAM, this.retrieveEntity)
-      .get('/', this.getAll)
-      .post('/', this.create)
-      .get(this.ID_PATH, this.getOne)
-      .patch(this.ID_PATH, this.merge)
-      .put(this.ID_PATH, this.update)
-      .delete(this.ID_PATH, this.delete)
-  }
-
+export default (Entity) => class EntityHandler {
   static retrieveEntity (req, res, next, id) {
     Repository.find(Entity, { id: id })
       .then((entity) => {
