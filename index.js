@@ -1,4 +1,5 @@
+const config = require('./config/server')
 const server = require('./server')
 const setup = require('./setup')
 
-setup().then(() => server.listen(3000, () => console.log('App started on port 3000')))
+setup().then(() => server.listen(config.port, () => console.log(`Server started on port ${config.port}`)))

@@ -6,8 +6,8 @@
   "license": "BSD",
   "main": "dist/index.js",
   "scripts": {
-    "start:dev": "nodemon index.js --exec \"standard && node\"",
-    "start": "node index.js",
+    "start": "NODE_ENV=production node index.js",
+    "start:dev": "NODE_ENV=development nodemon index.js --exec \"standard && node\"",
     "test": "standard && cross-env NODE_ENV=test mocha --recursive",
     "lint": "standard --fix"
   },
