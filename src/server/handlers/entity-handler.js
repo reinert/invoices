@@ -1,26 +1,8 @@
-import express from 'express'
+import { Repository } from '../../db'
 
-export default (Entity) => class Resource {
-  static get ID_PARAM () { return 'id' }
-  static get ID_PATH () { return `/:${this.ID_PARAM}([0-9]+)` }
-
-  static getRouter () {
-    return this.bind(express.Router())
-  }
-
-  static bind (router) {
-    return router
-      .param(this.ID_PARAM, this.retrieveEntity)
-      .get('/', this.getAll)
-      .post('/', this.create)
-      .get(this.ID_PATH, this.getOne)
-      .patch(this.ID_PATH, this.merge)
-      .put(this.ID_PATH, this.update)
-      .delete(this.ID_PATH, this.delete)
-  }
-
+export default (Entity) => class EntityHandler {
   static retrieveEntity (req, res, next, id) {
-    Entity.Repository.findById(id)
+    Repository.find(Entity, { id: id })
       .then((entity) => {
         if (entity) {
           req.entity = entity
@@ -33,13 +15,13 @@ export default (Entity) => class Resource {
   }
 
   static getAll (req, res, next) {
-    Entity.Repository.findAll()
+    Repository.find(Entity)
       .then((entities) => res.json(entities))
       .catch(next)
   }
 
   static create (req, res, next) {
-    Entity.Repository.save(new Entity(req.body))
+    Repository.save(new Entity(req.body))
       .then((entity) => res.status(201).location(`${req.baseUrl}/${entity.id}`).json(entity))
       .catch(next)
   }
@@ -49,19 +31,19 @@ export default (Entity) => class Resource {
   }
 
   static merge (req, res, next) {
-    Entity.Repository.save(req.entity.merge(req.body))
+    Repository.save(req.entity.merge(req.body))
       .then((entity) => res.json(entity))
       .catch(next)
   }
 
   static update (req, res, next) {
-    Entity.Repository.save(req.entity.update(req.body))
+    Repository.save(req.entity.update(req.body))
       .then((entity) => res.json(entity))
       .catch(next)
   }
 
   static delete (req, res, next) {
-    Entity.Repository.destroy(req.entity)
+    Repository.destroy(req.entity)
       .then(() => res.sendStatus(204))
       .catch(next)
   }

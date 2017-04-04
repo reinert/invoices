@@ -1,17 +1,16 @@
-import Sequelize from 'sequelize'
-import NotImplementedError from './errors/not-implemented-error'
+import Holder from './holder'
 
 export default class Entity {
   constructor (values) {
     this._defineProperties()
 
-    const instance = (values instanceof Sequelize.Instance) ? values : this.Model.build(this._sanitize(values))
+    const holder = isHolder(values) ? values : new Holder(this._sanitize(values))
 
-    Object.defineProperty(this, '_instance', {
-      value: instance,
+    Object.defineProperty(this, '_holder', {
+      value: holder,
       enumerable: false,
-      writable: false,
-      configurable: false
+      writable: true,
+      configurable: true
     })
   }
 
@@ -26,8 +25,8 @@ export default class Entity {
       accessor: property,
       enumerable: true,
       configurable: true,
-      get: function () { return this._instance.get(property) },
-      set: function (value) { this._instance.set(property, value) }
+      get: function () { return this._holder.get(property) },
+      set: function (value) { this._holder.set(property, value) }
     }
 
     if (descriptor) {
@@ -44,10 +43,6 @@ export default class Entity {
     this.prototype._propertyDescriptors[property] = d
   }
 
-  static get Repository () { throw new NotImplementedError('Repository static getter must be overridden by subclasses.') }
-
-  get Model () { throw new NotImplementedError('Model getter must be overridden by subclasses.') }
-
   _defineProperties () {
     for (let p in this._descriptors) {
       let descriptor = this._propertyDescriptors[p]
@@ -56,13 +51,13 @@ export default class Entity {
   }
 
   _get (property) {
-    return this._instance.get(property)
+    return this._holder.get(property)
   }
 
   _set (property, value, force) {
     if (this._descriptors.hasOwnProperty(property)) {
       if (this._descriptors[property].readOnly ? force : true) {
-        this._instance.set(property, value)
+        this._holder.set(property, value)
         return true
       }
     }
@@ -123,4 +118,9 @@ Entity.$('updatedAt', { readOnly: true })
 
 function ensureUnderscore (str) {
   return (str && str[0] !== '_') ? '_' + str : str
+}
+
+// Holder duck type check
+function isHolder (obj) {
+  return typeof obj.set === 'function' && typeof obj.get === 'function'
 }

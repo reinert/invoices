@@ -1,18 +1,9 @@
-import { override } from 'core-decorators'
 import bcrypt from 'bcrypt'
-import { UserModel } from '../persistence'
 import Entity from './entity'
-import Repository from './repository'
 
 const SALT_ROUNDS = 13
 
 export default class User extends Entity {
-  @override
-  static get Repository () { return UserRepository }
-
-  @override
-  get Model () { return UserModel }
-
   setPassword (plainPassword) {
     return bcrypt.hash(plainPassword, SALT_ROUNDS)
         .then((hash) => {
@@ -35,5 +26,3 @@ User.$('username')
 User.$('email')
 User.$('password', { private: true })
 User.$('isEncrypted', { private: true })
-
-class UserRepository extends Repository(UserModel, User) { }
