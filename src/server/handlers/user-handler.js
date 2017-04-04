@@ -1,6 +1,6 @@
 import { override } from 'core-decorators'
 import { User } from '../../core'
-import { Repository } from '../../sequelize'
+import { Repository } from '../../db'
 import HeaderValidationError from '../errors/header-validation-error'
 import EntityHandler from './entity-handler'
 

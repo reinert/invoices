@@ -1,4 +1,4 @@
-import { Repository } from './sequelize'
+import { Repository } from './db'
 import { User } from './core'
 
 export default () => {

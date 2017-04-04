@@ -1,4 +1,4 @@
-import { Repository } from '../../sequelize'
+import { Repository } from '../../db'
 
 export default (Entity) => class EntityHandler {
   static retrieveEntity (req, res, next, id) {
