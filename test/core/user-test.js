@@ -1,7 +1,7 @@
 /* global describe beforeEach it */
-import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
-import { User } from '../../src/core'
+const chai = require('chai')
+const chaiAsPromised = require('chai-as-promised')
+const User = require('../../core').User
 
 chai.use(chaiAsPromised)
 const expect = chai.expect
