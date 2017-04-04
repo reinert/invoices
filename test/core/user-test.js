@@ -1,7 +1,7 @@
 /* global describe beforeEach it */
-import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
-import { User } from '../../src/core'
+const chai = require('chai')
+const chaiAsPromised = require('chai-as-promised')
+const { User } = require('../../core')
 
 chai.use(chaiAsPromised)
 const expect = chai.expect
@@ -19,12 +19,14 @@ describe('User', () => {
   })
 
   it('comparePassword returns true when password matches', () => {
-    let p = user.setPassword('123456').then((user) => user.comparePassword('123456'))
+    let p = user.setPassword('123456')
+      .then((user) => user.comparePassword('123456'))
     return expect(p).to.eventually.be.true
   })
 
   it('comparePassword returns false when password does not match', () => {
-    let p = user.setPassword('123456').then((user) => user.comparePassword('123'))
+    let p = user.setPassword('123456')
+      .then((user) => user.comparePassword('123'))
     return expect(p).to.eventually.be.false
   })
 

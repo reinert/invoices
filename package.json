@@ -6,19 +6,15 @@
   "license": "BSD",
   "main": "dist/index.js",
   "scripts": {
-    "start": "nodemon src/index.js --exec \"standard && babel-node\"",
-    "build": "standard && babel src -d dist",
-    "serve": "node dist/index.js",
-    "test": "standard && cross-env NODE_ENV=test mocha --recursive --compilers js:babel-register",
+    "start": "npm run start:dev",
+    "start:dev": "NODE_ENV=development nodemon index.js --exec \"standard && node\"",
+    "start:prod": "NODE_ENV=production node index.js",
+    "test": "standard && cross-env NODE_ENV=test mocha --recursive",
     "lint": "standard --fix"
-  },
-  "standard": {
-    "parser": "babel-eslint"
   },
   "dependencies": {
     "bcrypt": "^1.0.2",
     "body-parser": "^1.17.1",
-    "core-decorators": "^0.15.0",
     "express": "^4.15.2",
     "helmet": "^3.5.0",
     "morgan": "^1.8.1",
@@ -26,13 +22,6 @@
     "sqlite3": "^3.1.8"
   },
   "devDependencies": {
-    "babel-cli": "^6.24.0",
-    "babel-eslint": "^7.2.1",
-    "babel-plugin-transform-builtin-extend": "^1.1.2",
-    "babel-plugin-transform-decorators": "^6.22.0",
-    "babel-plugin-transform-decorators-legacy": "^1.3.4",
-    "babel-preset-env": "^1.2.1",
-    "babel-register": "^6.24.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "cross-env": "^3.2.4",
