@@ -6,7 +6,7 @@ import EntityHandler from './entity-handler'
 
 const B64_REGEX = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/
 
-export default class UserHandler extends EntityHandler(User) {
+export default class UserHandler extends EntityHandler(User, '/users') {
   static retrievePassword (req, res, next) {
     let b64Password = req.get('encp')
 

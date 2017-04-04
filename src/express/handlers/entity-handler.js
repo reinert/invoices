@@ -1,7 +1,8 @@
 import express from 'express'
 import { Repository } from '../../sequelize'
 
-export default (Entity) => class EntityHandler {
+export default (Entity, route) => class EntityHandler {
+  static get ROUTE () { return route }
   static get ID_PARAM () { return 'id' }
   static get ID_PATH () { return `/:${this.ID_PARAM}([0-9]+)` }
 
