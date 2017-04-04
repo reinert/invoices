@@ -30,7 +30,8 @@ const UserModel = datasource.define('user', {
     validate: {
       isTrue: function (value) {
         if (value !== true) {
-          throw new Error('Password must be encrypted before persisting the user')
+          throw new Error(
+            'Password must be encrypted before persisting the user')
         }
       }
     }

@@ -20,11 +20,8 @@ class User extends Entity {
   }
 
   toString () {
-    return `User: {
-              id: ${this.id},
-              username: ${this.username},
-              email: ${this.email}
-            }`
+    return `User: {id: ${this.id}, username: ${this.username}, `
+      + `email: ${this.email} }`
   }
 }
 
