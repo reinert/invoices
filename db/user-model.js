@@ -17,7 +17,9 @@ const UserModel = datasource.define('user', {
     allowNull: false,
     validate: {
       isString: function (value) {
-        if (!(typeof value === 'string' || value instanceof String)) throw new Error('Password must be a string')
+        if (!(typeof value === 'string' || value instanceof String)) {
+          throw new Error('Password must be a string')
+        }
       }
     }
   },
@@ -27,7 +29,9 @@ const UserModel = datasource.define('user', {
     defaultValue: false,
     validate: {
       isTrue: function (value) {
-        if (value !== true) throw new Error('Password must be encrypted before persisting the user')
+        if (value !== true) {
+          throw new Error('Password must be encrypted before persisting the user')
+        }
       }
     }
   }

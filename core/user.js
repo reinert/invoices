@@ -19,7 +19,13 @@ class User extends Entity {
       : Promise.reject(new Error('Password not encrypted yet'))
   }
 
-  toString () { return `User: { id: ${this.id}, username: ${this.username}, email: ${this.email} }` }
+  toString () {
+    return `User: {
+              id: ${this.id},
+              username: ${this.username},
+              email: ${this.email}
+            }`
+  }
 }
 
 User.$('username')

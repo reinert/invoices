@@ -22,7 +22,8 @@ module.exports = (Entity) => class EntityHandler {
 
   static create (req, res, next) {
     Repository.save(new Entity(req.body))
-      .then((entity) => res.status(201).location(`${req.baseUrl}/${entity.id}`).json(entity))
+      .then((entity) =>
+        res.status(201).location(`${req.baseUrl}/${entity.id}`).json(entity))
       .catch(next)
   }
 

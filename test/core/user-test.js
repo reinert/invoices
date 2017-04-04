@@ -19,12 +19,14 @@ describe('User', () => {
   })
 
   it('comparePassword returns true when password matches', () => {
-    let p = user.setPassword('123456').then((user) => user.comparePassword('123456'))
+    let p = user.setPassword('123456')
+      .then((user) => user.comparePassword('123456'))
     return expect(p).to.eventually.be.true
   })
 
   it('comparePassword returns false when password does not match', () => {
-    let p = user.setPassword('123456').then((user) => user.comparePassword('123'))
+    let p = user.setPassword('123456')
+      .then((user) => user.comparePassword('123'))
     return expect(p).to.eventually.be.false
   })
 

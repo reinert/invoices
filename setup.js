@@ -10,7 +10,10 @@ function setup () {
   switch (process.env.NODE_ENV) {
     case 'development':
       return Repository.sync({force: true})
-        .then(() => new User({username: 'john', email: 'john@bar.com'}).setPassword('123456'))
+        .then(() => {
+          const user = new User({username: 'john', email: 'john@bar.com'})
+          return user.setPassword('123456')
+        })
         .then((user) => Repository.save(user))
         .then(() => console.log('Development setup done!'))
         .catch((err) => {

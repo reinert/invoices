@@ -7,14 +7,20 @@ const Sequelize = require('sequelize')
 class SequelizeRepository extends Repository {
   // @override
   static find (Entity, options) {
-    return options != null && options.hasOwnProperty('id')
-      ? getModel(Entity).findById(options.id, options).then((instance) => instance ? new Entity(instance) : null)
-      : getModel(Entity).findAll(options).then((instances) => instances ? proxyArray(Entity, instances) : null)
+    if (options != null && options.hasOwnProperty('id')) {
+      return getModel(Entity).findById(options.id, options)
+        .then(instance => instance ? new Entity(instance) : null)
+    } else {
+      return getModel(Entity).findAll(options)
+        .then(instances => instances ? proxyArray(Entity, instances) : null)
+    }
   }
 
   // @override
   static save (entity, options) {
-    return ensureInstance(entity)._holder.save(options).then((instance) => instance ? new entity.constructor(instance) : null)
+    return ensureInstance(entity)._holder
+      .save(options)
+      .then(instance => instance ? new entity.constructor(instance) : null)
   }
 
   // @override
