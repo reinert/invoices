@@ -6,10 +6,9 @@ const ID_PATH = `/:${ID_PARAM}([0-9]+)`
 
 export default express.Router()
     .get('/', UserHandler.getAll)
-    .param(ID_PARAM, UserHandler.retrievePassword)
-    .post('/', UserHandler.create)
+    .post('/', UserHandler.retrievePassword, UserHandler.create)
     .param(ID_PARAM, UserHandler.retrieveEntity)
     .get(ID_PATH, UserHandler.getOne)
-    .patch(ID_PATH, UserHandler.merge)
+    .patch(ID_PATH, UserHandler.retrievePassword, UserHandler.merge)
     .put(ID_PATH, UserHandler.update)
     .delete(ID_PATH, UserHandler.delete)
