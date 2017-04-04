@@ -4,8 +4,8 @@ class Entity {
   constructor (values) {
     this._defineProperties()
 
-    const holder = isHolder(values) 
-      ? values 
+    const holder = isHolder(values)
+      ? values
       : new Holder(this._sanitize(values))
 
     Object.defineProperty(this, '_holder', {
