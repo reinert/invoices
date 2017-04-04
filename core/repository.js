@@ -1,4 +1,4 @@
-const NotImplementedError = require('./errors').NotImplementedError
+const { NotImplementedError } = require('./errors')
 
 class Repository {
   static find (Entity, options) {

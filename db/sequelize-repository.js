@@ -1,7 +1,7 @@
 const datasource = require('./datasource')
 const EntityModelMap = require('./entity-model-map')
 const Holder = require('../core').Holder
-const Repository = require('../core').Repository
+const { Repository } = require('../core')
 const Sequelize = require('sequelize')
 
 class SequelizeRepository extends Repository {

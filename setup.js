@@ -1,8 +1,9 @@
-const Repository = require('./db').Repository
-const User = require('./core').User
+const { Repository } = require('./db')
+const { User } = require('./core')
 
 /**
- * Setup the app prerequisites that are needed before starting the server
+ * Setup the app prerequisites required before starting the server
+ *
  * @returns {Promise}
  */
 function setup () {

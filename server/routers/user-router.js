@@ -1,5 +1,5 @@
 const express = require('express')
-const UserHandler = require('../handlers').UserHandler
+const { UserHandler } = require('../handlers')
 
 const ID_PARAM = 'id'
 const ID_PATH = `/:${ID_PARAM}([0-9]+)`

@@ -1,4 +1,4 @@
-const Repository = require('../../db').Repository
+const { Repository } = require('../../db')
 
 module.exports = (Entity) => class EntityHandler {
   static retrieveEntity (req, res, next, id) {

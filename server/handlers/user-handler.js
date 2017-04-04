@@ -1,7 +1,7 @@
 const EntityHandler = require('./entity-handler')
-const HeaderValidationError = require('../errors').HeaderValidationError
-const Repository = require('../../db').Repository
-const User = require('../../core').User
+const { HeaderValidationError } = require('../errors')
+const { Repository } = require('../../db')
+const { User } = require('../../core')
 
 const B64_REGEX = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/
 

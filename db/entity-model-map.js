@@ -1,4 +1,4 @@
-const NonexistentEntityError = require('../core/errors').NonexistentEntityError
+const { errors: { NonexistentEntityError } } = require('../core')
 const UserModel = require('./user-model')
 const User = require('../core').User
 

@@ -1,7 +1,7 @@
 /* global describe beforeEach it */
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
-const User = require('../../core').User
+const { User } = require('../../core')
 
 chai.use(chaiAsPromised)
 const expect = chai.expect

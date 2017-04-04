@@ -1,9 +1,9 @@
 const bodyParser = require('body-parser')
-const ErrorHandler = require('./handlers').ErrorHandler
+const { ErrorHandler } = require('./handlers')
 const express = require('express')
 const helmet = require('helmet')
 const morgan = require('morgan')
-const userRouter = require('./routers').userRouter
+const { userRouter } = require('./routers')
 
 module.exports = express()
   .use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
