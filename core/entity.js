@@ -2,8 +2,6 @@ const Holder = require('./holder')
 
 class Entity {
   constructor (values) {
-    this._defineProperties()
-
     const holder = isHolder(values)
       ? values
       : new Holder(this._sanitize(values))
@@ -14,6 +12,8 @@ class Entity {
       writable: true,
       configurable: true
     })
+
+    this._defineProperties()
   }
 
   static $ (property, descriptor) {
@@ -21,7 +21,8 @@ class Entity {
   }
 
   static _processDescriptor (property, descriptor) {
-    this.prototype._descriptors[property] = descriptor || {}
+    this.prototype._descriptors[property] =
+      Object.assign(descriptor || {}, this.prototype._descriptors[property])
 
     const d = {
       accessor: property,
@@ -48,7 +49,12 @@ class Entity {
   _defineProperties () {
     for (let p in this._descriptors) {
       let descriptor = this._propertyDescriptors[p]
+      // set property descriptor in this instance
       Object.defineProperty(this, descriptor.accessor, descriptor)
+      // set default value if necessary
+      if (this._descriptors[p].value != null) {
+        this._holder.set(p, this._descriptors[p].value)
+      }
     }
   }
 
