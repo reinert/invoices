@@ -25,7 +25,7 @@ class AuthHandler {
         res.set({ 'x-access-token': token })
         res.sendStatus(httpStatus.OK)
       })
-      .catch(e => res.sendStatus(httpStatus.UNAUTHORIZED))
+      .catch(() => res.sendStatus(httpStatus.UNAUTHORIZED))
   }
 }
 

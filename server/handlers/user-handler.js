@@ -1,5 +1,5 @@
+const { ApiError } = require('../errors')
 const EntityHandler = require('./entity-handler')
-const { HeaderValidationError } = require('../errors')
 const httpStatus = require('http-status')
 const { Repository } = require('../../db')
 const { User } = require('../../core')
@@ -21,7 +21,7 @@ class UserHandler extends EntityHandler(User) {
       } catch (err) {
         const errorMessage =
           'Invalid encp format. Are you sure it is base64 encoded?'
-        return next(new HeaderValidationError('encp', errorMessage), err)
+        return next(new ApiError(errorMessage, httpStatus.BAD_REQUEST))
       }
     }
 
@@ -32,7 +32,7 @@ class UserHandler extends EntityHandler(User) {
   static create (req, res, next) {
     if (!req.password) {
       const errorMessage = 'encp header must be informed'
-      return next(new HeaderValidationError('encp', errorMessage))
+      return next(new ApiError(errorMessage, httpStatus.BAD_REQUEST))
     }
 
     let user = new User(req.body)

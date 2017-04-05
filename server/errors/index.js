@@ -1,5 +1,5 @@
-const HeaderValidationError = require('./header-validation-error')
+const ApiError = require('./api-error')
 
 module.exports = {
-  HeaderValidationError
+  ApiError
 }
