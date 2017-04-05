@@ -1,5 +1,6 @@
 const EntityHandler = require('./entity-handler')
 const { HeaderValidationError } = require('../errors')
+const httpStatus = require('http-status')
 const { Repository } = require('../../db')
 const { User } = require('../../core')
 
@@ -38,7 +39,9 @@ class UserHandler extends EntityHandler(User) {
     user.setPassword(req.password)
       .then((user) => Repository.save(user))
       .then((user) =>
-        res.status(201).location(`${req.baseUrl}/${user.id}`).json(user))
+        res.status(httpStatus.CREATED)
+           .location(`${req.baseUrl}/${user.id}`)
+           .json(user))
       .catch(next)
   }
 

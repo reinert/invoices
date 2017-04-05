@@ -1,3 +1,4 @@
+const httpStatus = require('http-status')
 const { Repository } = require('../../db')
 
 module.exports = (Entity) => class EntityHandler {
@@ -9,7 +10,7 @@ module.exports = (Entity) => class EntityHandler {
           return next()
         }
 
-        res.sendStatus(404)
+        res.sendStatus(httpStatus.NOT_FOUND)
       })
       .catch(next)
   }
@@ -23,7 +24,9 @@ module.exports = (Entity) => class EntityHandler {
   static create (req, res, next) {
     Repository.save(new Entity(req.body))
       .then((entity) =>
-        res.status(201).location(`${req.baseUrl}/${entity.id}`).json(entity))
+        res.status(httpStatus.CREATED)
+           .location(`${req.baseUrl}/${entity.id}`)
+           .json(entity))
       .catch(next)
   }
 
@@ -45,7 +48,7 @@ module.exports = (Entity) => class EntityHandler {
 
   static delete (req, res, next) {
     Repository.destroy(req.entity)
-      .then(() => res.sendStatus(204))
+      .then(() => res.sendStatus(httpStatus.NO_CONTENT))
       .catch(next)
   }
 }

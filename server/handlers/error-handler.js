@@ -1,3 +1,5 @@
+const httpStatus = require('http-status')
+
 class ErrorHandler {
   static all () {
     return [this.headerValidation, this.sequelizeValidation, this.uncaught]
@@ -10,7 +12,7 @@ class ErrorHandler {
 
     console.log('--- HEADER VALIDATION ERROR OCURRED ---')
 
-    res.status(400).json(err)
+    res.status(httpStatus.BAD_REQUEST).json(err)
   }
 
   static sequelizeValidation (err, req, res, next) {
@@ -22,7 +24,7 @@ class ErrorHandler {
 
     console.log('--- RESOURCE VALIDATION ERROR OCURRED ---')
 
-    res.status(400).json(err)
+    res.status(httpStatus.BAD_REQUEST).json(err)
   }
 
   static uncaught (err, req, res, next) {

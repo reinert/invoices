@@ -1,4 +1,5 @@
 const express = require('express')
+const expressJwt = require('express-jwt')
 const { UserHandler } = require('../handlers')
 
 const ID_PARAM = 'id'
@@ -7,6 +8,8 @@ const ID_PATH = `/:${ID_PARAM}([0-9]+)`
 const router = express.Router()
 
 router.param(ID_PARAM, UserHandler.retrieveEntity)
+
+router.use(expressJwt({ secret: process.env.JWT_SECRET }))
 
 router.route('/')
   .get(UserHandler.getAll)
