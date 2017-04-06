@@ -2,7 +2,7 @@ const Holder = require('./holder')
 
 class Entity {
   constructor (values) {
-    this._initHolder(values)
+    this._initHolder(values || {})
     this._initProperties()
   }
 
@@ -96,7 +96,8 @@ class Entity {
   _sanitize (values) {
     if (values) {
       for (let p in values) {
-        if (this.constructor._descriptors[p] && this.constructor._descriptors[p].private) {
+        if (this.constructor._descriptors[p] &&
+            (this._isPrivate(p) || this._isDefaultReadOnly(p))) {
           delete values[p]
         }
       }
@@ -104,10 +105,20 @@ class Entity {
     return values
   }
 
+  _isPrivate (property) {
+    return this.constructor._descriptors[property].private === true
+  }
+
+  _isDefaultReadOnly (property) {
+    return this.constructor._descriptors[property].readOnly === true &&
+      this.constructor._descriptors[property].value != null
+  }
+
   merge (values) {
     if (values) {
       for (let p in values) {
-        if (this.constructor._descriptors[p] && !this.constructor._descriptors[p].private) {
+        if (this.constructor._descriptors[p] &&
+            !this.constructor._descriptors[p].private) {
           this._set(p, values[p])
         }
       }
