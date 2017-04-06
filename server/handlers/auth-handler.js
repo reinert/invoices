@@ -1,5 +1,5 @@
-const { HeaderValidationError } = require('../errors')
-const httpStatus = require('http-status')
+const { ApiError } = require('../errors')
+const HttpStatus = require('http-status')
 const jwt = require('jsonwebtoken')
 const { Repository } = require('../../db')
 const { User } = require('../../core')
@@ -7,25 +7,36 @@ const { User } = require('../../core')
 class AuthHandler {
   static login (req, res, next) {
     if (!req.get('email')) {
-      return next(new HeaderValidationError('email', 'email must be informed'))
+      const message = 'email header must be informed'
+      return next(new ApiError(message, HttpStatus.BAD_REQUEST))
     }
     if (!req.password) {
-      return next(new HeaderValidationError('encp', 'encp must be informed'))
+      const message = 'encp header must be informed'
+      return next(new ApiError(message, HttpStatus.BAD_REQUEST))
     }
     Repository.find(User, { where: { 'email': req.get('email') } })
-      .then(users => users[0])
+      .then(users => {
+        if (users.length !== 1) {
+          const message = 'Invalid credentials'
+          return next(new ApiError(message, HttpStatus.UNAUTHORIZED))
+        }
+        return users[0]
+      })
       .then(user => user.comparePassword(req.password))
       .then(success => {
-        if (!success) return Promise.reject(new Error())
+        if (!success) {
+          const message = 'Invalid credentials'
+          return next(new ApiError(message, HttpStatus.UNAUTHORIZED))
+        }
 
         const secret = process.env.JWT_SECRET
         const options = { expiresIn: '1d' }
         const token = jwt.sign({ email: req.get('email') }, secret, options)
 
         res.set({ 'x-access-token': token })
-        res.sendStatus(httpStatus.OK)
+        res.sendStatus(HttpStatus.OK)
       })
-      .catch(() => res.sendStatus(httpStatus.UNAUTHORIZED))
+      .catch(next)
   }
 }
 

@@ -1,14 +1,14 @@
 const { ApiError } = require('../errors')
-const EntityHandler = require('./entity-handler')
-const httpStatus = require('http-status')
+const HttpStatus = require('http-status')
 const { Repository } = require('../../db')
+const ResourceHandler = require('./resource-handler')
 const { User } = require('../../core')
 
 const B64_REGEX = new RegExp(
   '^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$'
 )
 
-class UserHandler extends EntityHandler(User) {
+class UserHandler extends ResourceHandler(User) {
   static retrievePassword (req, res, next) {
     let b64Password = req.get('encp')
 
@@ -19,9 +19,8 @@ class UserHandler extends EntityHandler(User) {
         }
         req.password = Buffer.from(b64Password, 'base64').toString()
       } catch (err) {
-        const errorMessage =
-          'Invalid encp format. Are you sure it is base64 encoded?'
-        return next(new ApiError(errorMessage, httpStatus.BAD_REQUEST))
+        const message = 'encp header is not base64 encoded'
+        return next(new ApiError(message, HttpStatus.BAD_REQUEST))
       }
     }
 
@@ -31,17 +30,17 @@ class UserHandler extends EntityHandler(User) {
   // @override
   static create (req, res, next) {
     if (!req.password) {
-      const errorMessage = 'encp header must be informed'
-      return next(new ApiError(errorMessage, httpStatus.BAD_REQUEST))
+      const message = 'encp header must be informed'
+      return next(new ApiError(message, HttpStatus.BAD_REQUEST))
     }
 
     let user = new User(req.body)
     user.setPassword(req.password)
-      .then((user) => Repository.save(user))
-      .then((user) =>
-        res.status(httpStatus.CREATED)
-           .location(`${req.baseUrl}/${user.id}`)
-           .json(user))
+      .then(user => Repository.save(user))
+      .then(user =>
+        res.status(HttpStatus.CREATED)
+          .location(`${req.baseUrl}/${user.id}`)
+          .json(user))
       .catch(next)
   }
 
@@ -51,8 +50,8 @@ class UserHandler extends EntityHandler(User) {
 
     return (req.password ? req.entity.setPassword(req.password)
                          : Promise.resolve(req.entity))
-      .then((user) => Repository.save(user))
-      .then((user) => res.json(user))
+      .then(user => Repository.save(user))
+      .then(user => res.json(user))
       .catch(next)
   }
 }

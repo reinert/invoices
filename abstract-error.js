@@ -1,6 +1,7 @@
 class AbstractError extends Error {
-  constructor (message) {
+  constructor (message, cause) {
     super(message)
+    this.cause = cause
     this.name = this.constructor.name
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, this.constructor)

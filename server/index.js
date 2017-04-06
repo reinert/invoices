@@ -1,11 +1,17 @@
+const { apiErrorHandler } = require('./error-handlers')
 const { ApiError } = require('./errors')
 const { authRouter, userRouter } = require('./routers')
 const bodyParser = require('body-parser')
-const errorHandler = require('./helpers/error-handler')
 const express = require('express')
 const helmet = require('helmet')
-const httpStatus = require('http-status')
+const HttpStatus = require('http-status')
 const morgan = require('morgan')
+const { sequelizeErrorHandler } = require('./error-handlers')
+const { uncaughtErrorHandler } = require('./error-handlers')
+
+function notFoundHandler (req, res, next) {
+  next(new ApiError(HttpStatus.BAD_REQUEST))
+}
 
 module.exports = express()
   .use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
@@ -13,6 +19,7 @@ module.exports = express()
   .use(bodyParser.json({ type: 'application/json' }))
   .use('/auth', authRouter)
   .use('/users', userRouter)
-  .use((req, res, next) =>
-    next(new ApiError('Invalid request', httpStatus.BAD_REQUEST, true)))
-  .use(errorHandler)
+  .use(notFoundHandler)
+  .use(sequelizeErrorHandler)
+  .use(apiErrorHandler)
+  .use(uncaughtErrorHandler)
