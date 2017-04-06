@@ -25,9 +25,11 @@ class User extends Entity {
   }
 }
 
-User.$('username')
-User.$('email')
-User.$('password', { private: true })
-User.$('isEncrypted', { private: true })
+User.$({
+  'username': {},
+  'email': {},
+  'password': { private: true },
+  'isEncrypted': { private: true }
+})
 
 module.exports = User

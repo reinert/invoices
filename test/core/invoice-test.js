@@ -1,7 +1,7 @@
-// global describe beforeEach it */
+/* global describe beforeEach it */
 const chai = require('chai')
 // const chaiAsPromised = require('chai-as-promised')
-const { SimpleInvoice, Invoice } = require('../../core')
+const { Invoice, SimpleInvoice, User } = require('../../core')
 
 // chai.use(chaiAsPromised)
 const expect = chai.expect
@@ -14,15 +14,26 @@ describe('Invoice', () => {
       { invoiceDate: new Date(), amount: 100.00 })
   })
 
-  it('type descriptor has \'value\' and \'readOnly\' props after creation',
-    () => {
-    expect(SimpleInvoice.prototype).to.have.deep.property(
-      '_descriptors.type.readOnly', true)
-    expect(SimpleInvoice.prototype).to.have.deep.property(
-      '_descriptors.type.value', 'SIMPLE')
+  it('properties\' values should not be mixed in multiple instances', () => {
+    let john = new User({username: 'john'})
+    let bob = new User({username: 'bob'})
+    expect(john).to.have.property('username', 'john')
+    expect(bob).to.have.property('username', 'bob')
   })
 
-  it('type is SIMPLE after creation', () => {
+  it('type descriptor has \'value\' and \'readOnly\' props after creation',
+    () => {
+      expect(Invoice).to.have.deep.property(
+        '_descriptors.type.readOnly', true)
+      expect(Invoice).to.not.have.deep.property(
+        '_descriptors.type.value')
+      expect(SimpleInvoice).to.have.deep.property(
+        '_descriptors.type.readOnly', true)
+      expect(SimpleInvoice).to.have.deep.property(
+        '_descriptors.type.value', 'SIMPLE')
+    })
+
+  it('type is \'SIMPLE\' after creation', () => {
     return expect(simpleInvoice).to.have.property('type', 'SIMPLE')
   })
 })

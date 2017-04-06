@@ -1,8 +1,7 @@
 const Invoice = require('./invoice')
 
-class SimpleInvoice extends Invoice {
-}
+class SimpleInvoice extends Invoice {}
 
-Invoice.$('type', { value: 'SIMPLE' })
+SimpleInvoice.$({ 'type': { value: 'SIMPLE' } })
 
-module.exports = Invoice
+module.exports = SimpleInvoice

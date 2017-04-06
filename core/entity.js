@@ -2,27 +2,35 @@ const Holder = require('./holder')
 
 class Entity {
   constructor (values) {
-    const holder = isHolder(values)
-      ? values
-      : new Holder(this._sanitize(values))
-
-    Object.defineProperty(this, '_holder', {
-      value: holder,
-      enumerable: false,
-      writable: true,
-      configurable: true
-    })
-
-    this._defineProperties()
+    this._initHolder(values)
+    this._initProperties()
   }
 
-  static $ (property, descriptor) {
-    this._processDescriptor(property, descriptor)
+  static $ (propertyDescriptorsMap) {
+    const proto = Object.getPrototypeOf(this)
+
+    Object.defineProperty(this, '_descriptors', {
+      value: Object.assign({}, proto._descriptors),
+      enumerable: false,
+      configurable: false,
+      writable: false
+    })
+
+    Object.defineProperty(this, '_propertyDescriptors', {
+      value: Object.assign({}, proto._propertyDescriptors),
+      enumerable: false,
+      configurable: false,
+      writable: false
+    })
+
+    for (let p in propertyDescriptorsMap) {
+      this._processDescriptor(p, propertyDescriptorsMap[p])
+    }
   }
 
   static _processDescriptor (property, descriptor) {
-    this.prototype._descriptors[property] =
-      Object.assign(descriptor || {}, this.prototype._descriptors[property])
+    this._descriptors[property] =
+      Object.assign(descriptor || {}, this._descriptors[property])
 
     const d = {
       accessor: property,
@@ -43,17 +51,30 @@ class Entity {
       }
     }
 
-    this.prototype._propertyDescriptors[property] = d
+    this._propertyDescriptors[property] = d
   }
 
-  _defineProperties () {
-    for (let p in this._descriptors) {
-      let descriptor = this._propertyDescriptors[p]
+  _initHolder (values) {
+    const holder = isHolder(values)
+      ? values
+      : new Holder(this._sanitize(values))
+
+    Object.defineProperty(this, '_holder', {
+      value: holder,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    })
+  }
+
+  _initProperties () {
+    for (let p in this.constructor._descriptors) {
+      let descriptor = this.constructor._propertyDescriptors[p]
       // set property descriptor in this instance
       Object.defineProperty(this, descriptor.accessor, descriptor)
       // set default value if necessary
-      if (this._descriptors[p].value != null) {
-        this._holder.set(p, this._descriptors[p].value)
+      if (this.constructor._descriptors[p].value != null) {
+        this._holder.set(p, this.constructor._descriptors[p].value)
       }
     }
   }
@@ -63,8 +84,8 @@ class Entity {
   }
 
   _set (property, value, force) {
-    if (this._descriptors.hasOwnProperty(property)) {
-      if (this._descriptors[property].readOnly ? force : true) {
+    if (this.constructor._descriptors.hasOwnProperty(property)) {
+      if (this.constructor._descriptors[property].readOnly ? force : true) {
         this._holder.set(property, value)
         return true
       }
@@ -75,7 +96,7 @@ class Entity {
   _sanitize (values) {
     if (values) {
       for (let p in values) {
-        if (this._descriptors[p] && this._descriptors[p].private) {
+        if (this.constructor._descriptors[p] && this.constructor._descriptors[p].private) {
           delete values[p]
         }
       }
@@ -86,7 +107,7 @@ class Entity {
   merge (values) {
     if (values) {
       for (let p in values) {
-        if (this._descriptors[p] && !this._descriptors[p].private) {
+        if (this.constructor._descriptors[p] && !this.constructor._descriptors[p].private) {
           this._set(p, values[p])
         }
       }
@@ -96,8 +117,8 @@ class Entity {
 
   update (values) {
     if (values) {
-      for (let p in this._descriptors) {
-        if (!this._descriptors[p].private) {
+      for (let p in this.constructor._descriptors) {
+        if (!this.constructor._descriptors[p].private) {
           this._set(p, values.hasOwnProperty(p) ? values[p] : null)
         }
       }
@@ -106,23 +127,11 @@ class Entity {
   }
 }
 
-Object.defineProperty(Entity.prototype, '_descriptors', {
-  value: {},
-  enumerable: false,
-  configurable: false,
-  writable: false
+Entity.$({
+  'id': { readOnly: true },
+  'createdAt': { readOnly: true },
+  'updatedAt': { readOnly: true }
 })
-
-Object.defineProperty(Entity.prototype, '_propertyDescriptors', {
-  value: {},
-  enumerable: false,
-  configurable: false,
-  writable: false
-})
-
-Entity.$('id', { readOnly: true })
-Entity.$('createdAt', { readOnly: true })
-Entity.$('updatedAt', { readOnly: true })
 
 function ensureUnderscore (str) {
   return (str && str[0] !== '_') ? '_' + str : str
