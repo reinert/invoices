@@ -12,6 +12,7 @@ describe('Entity Instance',
 
 class Thing extends Entity {}
 Thing.$({
+  'normal': {},
   'vl': { value: 'test' },
   'rly': { readOnly: true },
   'rlyVl': { readOnly: true, value: 'test' },
@@ -27,8 +28,15 @@ describe('Entity Inheritance Instance',
 describe('Entity Inheritance Descriptors',
   testDescriptors(Thing))
 
+describe('Entity Inheritance Public Methods',
+  testPublicMethods(Thing))
+
+describe('Entity Inheritance Protected Methods',
+  testProtectedMethods(Thing))
+
 class Parent extends Entity {}
 Parent.$({
+  'normal': {},
   'vl': { value: 'test' },
   'rlyVl': { readOnly: true }
 })
@@ -50,6 +58,12 @@ describe('Entity Inheritance Instance',
 
 describe('Entity Two Level Inheritance Descriptors',
   testDescriptors(Child))
+
+describe('Entity Two Level Inheritance Public Methods',
+  testPublicMethods(Child))
+
+describe('Entity Two Level Inheritance Protected Methods',
+  testProtectedMethods(Child))
 
 function testEntityConstructorProps (Clazz) {
   return () => {
@@ -82,7 +96,7 @@ function testEntityInstanceProps (Clazz) {
         .to.have.property('enumerable', false)
     })
 
-    it('properties\' values should not be mixed in multiple instances', () => {
+    it("properties' values should not be mixed in multiple instances", () => {
       let a = new Clazz({id: 1})
       let b = new Clazz({id: 2})
       expect(a).to.have.property('id', 1)
@@ -130,7 +144,7 @@ function testDescriptors (Clazz) {
       expect(instance).to.not.have.ownProperty('pvt')
     })
 
-    it('readOnly prop cannot be written in construction',
+    it('private prop cannot be written in construction',
       () => {
         let instance = new Clazz({ pvt: 123, _pvt: 123 })
         expect(instance._pvt).to.be.equal(undefined)
@@ -141,5 +155,71 @@ function testDescriptors (Clazz) {
       instance._pvt = 123
       expect(instance._pvt).to.be.equal(123)
     })
+  }
+}
+
+function testPublicMethods (Clazz) {
+  return () => {
+    it('merge overwrites writable properties', () => {
+      let instance = new Clazz({ normal: 'a' })
+
+      instance.merge({ normal: 'b', vl: 'other' })
+
+      expect(instance.normal).to.be.equal('b')
+      expect(instance.vl).to.be.equal('other')
+    })
+
+    it('merge does not affect non-writable properties', () => {
+      let instance = new Clazz({ normal: 'a' })
+
+      instance.merge({ pvt: 'newPvt', rly: 'newRly', rlyVl: 'newRlyVl' })
+
+      expect(instance.pvt).to.be.equal(undefined)
+      expect(instance.rly).to.be.equal(undefined)
+      expect(instance.rlyVl).to.be.equal('test')
+    })
+
+    it('merge missing properties does not affect instance', () => {
+      let instance = new Clazz({ normal: 'a' })
+
+      instance.merge({})
+
+      expect(instance.normal).to.be.equal('a')
+      expect(instance.vl).to.be.equal('test')
+    })
+
+    it('update overwrites writable properties', () => {
+      let instance = new Clazz({ normal: 'a' })
+
+      instance.update({ normal: 'b', vl: 'other' })
+
+      expect(instance.normal).to.be.equal('b')
+      expect(instance.vl).to.be.equal('other')
+    })
+
+    it('update does not affect non-writable properties', () => {
+      let instance = new Clazz({ normal: 'a' })
+
+      instance.update({ pvt: 'newPvt', rly: 'newRly', rlyVl: 'newRlyVl' })
+
+      expect(instance.pvt).to.be.equal(undefined)
+      expect(instance.rly).to.be.equal(undefined)
+      expect(instance.rlyVl).to.be.equal('test')
+    })
+
+    it('update missing properties are set to null', () => {
+      let instance = new Clazz({ normal: 'a' })
+
+      instance.update({})
+
+      expect(instance.normal).to.be.equal(null)
+      expect(instance.vl).to.be.equal(null)
+    })
+  }
+}
+
+function testProtectedMethods (Clazz) {
+  return () => {
+    // TODO: test _get and _set
   }
 }

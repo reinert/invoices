@@ -1,3 +1,4 @@
+const assert = require('assert')
 const Holder = require('./holder')
 
 class Entity {
@@ -6,7 +7,36 @@ class Entity {
     this.__initProperties()
   }
 
-  static $ (propertyDescriptorsMap) {
+  /**
+   *  Initializes an Entity with properties and their descriptors.
+   *  It must be called only once, after inheritor class declaration.
+   *
+   *  It accepts a dict in the following form:
+   *
+   *    {
+   *      'propA': { \/* propA descriptors *\/ },
+   *      ...
+   *      'propN': { \/* propN descriptors *\/ }
+   *    }
+   *
+   *  Valid descriptor's attributes are:
+   *    # {boolean} private - when true, the property is only accessible
+   *                          with an underline before, e.g.: inst._privProp;
+   *                          also it cannot be written in construction.
+   *    # {boolean} readOnly - when true, the property silently fails to write,
+   *                           e.g.: inst.ronlyProp = 'a' --> do nothing;
+   *                           still it can be written in construction.
+   *    # {*} value - the default value of the property; when set along with
+   *                  readOnly as true, it cannot be written in construction.
+   *
+   * @typedef {object.<string, *>} descriptor
+   * @param {object.<string, descriptor>} propertyDescriptorDict
+   */
+  static $ (propertyDescriptorDict) {
+    console.dir(this.hasOwnProperty('_descriptors'))
+    assert(!this.hasOwnProperty('_descriptors'),
+      'Entity Inheritor already initialized. $ must be called only once.')
+
     const proto = Object.getPrototypeOf(this)
 
     Object.defineProperty(this, '_descriptors', {
@@ -23,8 +53,8 @@ class Entity {
       writable: false
     })
 
-    for (let p in propertyDescriptorsMap) {
-      this.__processDescriptor(p, propertyDescriptorsMap[p])
+    for (let p in propertyDescriptorDict) {
+      this.__processDescriptor(p, propertyDescriptorDict[p])
     }
   }
 
@@ -56,6 +86,14 @@ class Entity {
     this._propertyDescriptors[property] = d
   }
 
+  /**
+   * Merges the given object with this instance.
+   * Missing properties in the given object will not affect the respective
+   * properties in this instance.
+   *
+   * @param {object} values
+   * @returns {Entity} this
+   */
   merge (values) {
     if (values) {
       for (let p in values) {
@@ -68,6 +106,14 @@ class Entity {
     return this
   }
 
+  /**
+   * Updates all the instance's values with the given object.
+   * If there are missing properties in the given object, then tey will be set
+   * to null in this instance.
+   *
+   * @param {object} values
+   * @returns {Entity} this
+   */
   update (values) {
     if (values) {
       for (let p in this.constructor._descriptors) {
@@ -79,10 +125,27 @@ class Entity {
     return this
   }
 
+  /**
+   * Gets the value of the given property.
+   *
+   * @param {string} property
+   * @returns {*} property's value
+   * @protected
+   */
   _get (property) {
     return this._holder.get(property)
   }
 
+  /**
+   * Assigns a new value to a property.
+   * ReadOnly properties can be written if force is true.
+   *
+   * @param {string} property - the property to assign a new value
+   * @param {*} value - the new value to assign to the property
+   * @param {boolean} [force] - true if writing a readOnly property is desired
+   * @returns {boolean} true if the property's value changed; false otherwise
+   * @protected
+   */
   _set (property, value, force) {
     if (this.constructor._descriptors.hasOwnProperty(property)) {
       if (this.constructor._descriptors[property].readOnly ? force : true) {
