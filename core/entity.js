@@ -8,32 +8,34 @@ class Entity {
   }
 
   /**
-   *  Initializes an Entity with properties and their descriptors.
-   *  It must be called only once, after inheritor class declaration.
+   * Initializes an Entity with properties and their descriptors.
+   * It must be called only once, after inheritor class declaration.
    *
-   *  It accepts a dict in the following form:
+   * It accepts a dict in the following form:
    *
-   *    {
-   *      'propA': { \/* propA descriptors *\/ },
-   *      ...
-   *      'propN': { \/* propN descriptors *\/ }
-   *    }
+   *   {
+   *     'propA': { \/* propA descriptors *\/ },
+   *     ...
+   *     'propN': { \/* propN descriptors *\/ }
+   *   }
    *
-   *  Valid descriptor's attributes are:
-   *    # {boolean} private - when true, the property is only accessible
-   *                          with an underline before, e.g.: inst._privProp;
-   *                          also it cannot be written in construction.
-   *    # {boolean} readOnly - when true, the property silently fails to write,
-   *                           e.g.: inst.ronlyProp = 'a' --> do nothing;
-   *                           still it can be written in construction.
-   *    # {*} value - the default value of the property; when set along with
-   *                  readOnly as true, it cannot be written in construction.
+   * Valid descriptor's attributes are:
+   *   # {boolean} private - when true, the property is only accessible
+   *                         with an underline before, e.g.: inst._privProp;
+   *                         also it cannot be written in construction.
+   *   # {boolean} readOnly - when true, the property silently fails to write,
+   *                          e.g.: inst.ronlyProp = 'a' --> do nothing;
+   *                          still it can be written in construction;
+   *                          additionally its possible to write over it
+   *                          using {@link _set} with force = true.
+   *   # {*} value - the default value of the property; when set along with
+   *                 readOnly as true, it cannot be written in construction.
    *
+   * @see {@link _set}
    * @typedef {object.<string, *>} descriptor
    * @param {object.<string, descriptor>} propertyDescriptorDict
    */
   static $ (propertyDescriptorDict) {
-    console.dir(this.hasOwnProperty('_descriptors'))
     assert(!this.hasOwnProperty('_descriptors'),
       'Entity Inheritor already initialized. $ must be called only once.')
 

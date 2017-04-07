@@ -170,7 +170,7 @@ function testPublicMethods (Clazz) {
     })
 
     it('merge does not affect non-writable properties', () => {
-      let instance = new Clazz({ normal: 'a' })
+      let instance = new Clazz()
 
       instance.merge({ pvt: 'newPvt', rly: 'newRly', rlyVl: 'newRlyVl' })
 
@@ -198,7 +198,7 @@ function testPublicMethods (Clazz) {
     })
 
     it('update does not affect non-writable properties', () => {
-      let instance = new Clazz({ normal: 'a' })
+      let instance = new Clazz()
 
       instance.update({ pvt: 'newPvt', rly: 'newRly', rlyVl: 'newRlyVl' })
 
@@ -220,6 +220,38 @@ function testPublicMethods (Clazz) {
 
 function testProtectedMethods (Clazz) {
   return () => {
-    // TODO: test _get and _set
+    it('readOnly is not written using _set', () => {
+      let instance = new Clazz()
+      instance._set('rly', 123)
+
+      expect(instance.rly).to.be.not.equal(123)
+    })
+
+    it('readOnly is written using _set(force = true)', () => {
+      let instance = new Clazz()
+      instance._set('rly', 123, true)
+
+      expect(instance.rly).to.be.equal(123)
+    })
+
+    it('private property is written using _set', () => {
+      let instance = new Clazz()
+      instance._set('pvt', 123)
+
+      expect(instance._pvt).to.be.equal(123)
+    })
+
+    it('default value is retrieved using _get', () => {
+      let instance = new Clazz()
+
+      expect(instance._get('vl')).to.be.equal('test')
+    })
+
+    it('private property is retrieved using _get', () => {
+      let instance = new Clazz()
+      instance._set('pvt', 123)
+
+      expect(instance._get('pvt')).to.be.equal(123)
+    })
   }
 }
