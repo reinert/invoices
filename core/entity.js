@@ -1,27 +1,70 @@
+const assert = require('assert')
 const Holder = require('./holder')
 
 class Entity {
   constructor (values) {
-    this._defineProperties()
+    this.__initHolder(values || {})
+    this.__initProperties()
+  }
 
-    const holder = isHolder(values)
-      ? values
-      : new Holder(this._sanitize(values))
+  /**
+   * Initializes an Entity with properties and their descriptors.
+   * It must be called only once, after inheritor class declaration.
+   *
+   * It accepts a dict in the following form:
+   *
+   *   {
+   *     'propA': { \/* propA descriptors *\/ },
+   *     ...
+   *     'propN': { \/* propN descriptors *\/ }
+   *   }
+   *
+   * Valid descriptor's attributes are:
+   *   # {boolean} private - when true, the property is only accessible
+   *                         with an underline before, e.g.: inst._privProp;
+   *                         also it cannot be written in construction.
+   *   # {boolean} readOnly - when true, the property silently fails to write,
+   *                          e.g.: inst.ronlyProp = 'a' --> do nothing;
+   *                          still it can be written in construction;
+   *                          additionally its possible to write over it
+   *                          using {@link _set} with force = true.
+   *   # {*} value - the default value of the property; when set along with
+   *                 readOnly as true, it cannot be written in construction.
+   *
+   * @see {@link _set}
+   * @typedef {object.<string, *>} descriptor
+   * @param {object.<string, descriptor>} propertyDescriptorDict
+   */
+  static $ (propertyDescriptorDict) {
+    assert(!this.hasOwnProperty('_descriptors'),
+      'Entity Inheritor already initialized. $ must be called only once.')
 
-    Object.defineProperty(this, '_holder', {
-      value: holder,
+    const proto = Object.getPrototypeOf(this)
+
+    Object.defineProperty(this, '_descriptors', {
+      value: Object.assign({}, proto._descriptors),
       enumerable: false,
-      writable: true,
-      configurable: true
+      configurable: false,
+      writable: false
     })
+
+    Object.defineProperty(this, '_propertyDescriptors', {
+      value: Object.assign({}, proto._propertyDescriptors),
+      enumerable: false,
+      configurable: false,
+      writable: false
+    })
+
+    for (let p in propertyDescriptorDict) {
+      this.__processDescriptor(p, propertyDescriptorDict[p])
+    }
   }
 
-  static $ (property, descriptor) {
-    this._processDescriptor(property, descriptor)
-  }
+  static __processDescriptor (property, descriptor) {
+    assert(descriptor != null, 'descriptor cannot be null')
 
-  static _processDescriptor (property, descriptor) {
-    this.prototype._descriptors[property] = descriptor || {}
+    this._descriptors[property] =
+      Object.assign(descriptor, this._descriptors[property])
 
     const d = {
       accessor: property,
@@ -42,45 +85,22 @@ class Entity {
       }
     }
 
-    this.prototype._propertyDescriptors[property] = d
+    this._propertyDescriptors[property] = d
   }
 
-  _defineProperties () {
-    for (let p in this._descriptors) {
-      let descriptor = this._propertyDescriptors[p]
-      Object.defineProperty(this, descriptor.accessor, descriptor)
-    }
-  }
-
-  _get (property) {
-    return this._holder.get(property)
-  }
-
-  _set (property, value, force) {
-    if (this._descriptors.hasOwnProperty(property)) {
-      if (this._descriptors[property].readOnly ? force : true) {
-        this._holder.set(property, value)
-        return true
-      }
-    }
-    return false
-  }
-
-  _sanitize (values) {
-    if (values) {
-      for (let p in values) {
-        if (this._descriptors[p] && this._descriptors[p].private) {
-          delete values[p]
-        }
-      }
-    }
-    return values
-  }
-
+  /**
+   * Merges the given object with this instance.
+   * Missing properties in the given object will not affect the respective
+   * properties in this instance.
+   *
+   * @param {object} values
+   * @returns {Entity} this
+   */
   merge (values) {
     if (values) {
       for (let p in values) {
-        if (this._descriptors[p] && !this._descriptors[p].private) {
+        if (this.constructor._descriptors[p] &&
+          !this.constructor._descriptors[p].private) {
           this._set(p, values[p])
         }
       }
@@ -88,35 +108,108 @@ class Entity {
     return this
   }
 
+  /**
+   * Updates all the instance's values with the given object.
+   * If there are missing properties in the given object, then tey will be set
+   * to null in this instance.
+   *
+   * @param {object} values
+   * @returns {Entity} this
+   */
   update (values) {
     if (values) {
-      for (let p in this._descriptors) {
-        if (!this._descriptors[p].private) {
+      for (let p in this.constructor._descriptors) {
+        if (!this.constructor._descriptors[p].private) {
           this._set(p, values.hasOwnProperty(p) ? values[p] : null)
         }
       }
     }
     return this
   }
+
+  /**
+   * Gets the value of the given property.
+   *
+   * @param {string} property
+   * @returns {*} property's value
+   * @protected
+   */
+  _get (property) {
+    return this._holder.get(property)
+  }
+
+  /**
+   * Assigns a new value to a property.
+   * ReadOnly properties can be written if force is true.
+   *
+   * @param {string} property - the property to assign a new value
+   * @param {*} value - the new value to assign to the property
+   * @param {boolean} [force] - true if writing a readOnly property is desired
+   * @returns {boolean} true if the property's value changed; false otherwise
+   * @protected
+   */
+  _set (property, value, force) {
+    if (this.constructor._descriptors.hasOwnProperty(property)) {
+      if (this.constructor._descriptors[property].readOnly ? force : true) {
+        this._holder.set(property, value)
+        return true
+      }
+    }
+    return false
+  }
+
+  __initHolder (values) {
+    const holder = isHolder(values)
+      ? values
+      : new Holder(this.__sanitize(values))
+
+    Object.defineProperty(this, '_holder', {
+      value: holder,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    })
+  }
+
+  __initProperties () {
+    for (let p in this.constructor._descriptors) {
+      let descriptor = this.constructor._propertyDescriptors[p]
+      // set property descriptor in this instance
+      Object.defineProperty(this, descriptor.accessor, descriptor)
+      // set default value if necessary
+      if (this.constructor._descriptors[p].value != null) {
+        this._holder.set(p, this.constructor._descriptors[p].value)
+      }
+    }
+  }
+
+  __sanitize (values) {
+    if (values) {
+      for (let p in values) {
+        if (this.constructor._descriptors[p] &&
+            (this.__isPrivate(p) || this.__isDefaultReadOnly(p))) {
+          delete values[p]
+        }
+      }
+    }
+    return values
+  }
+
+  __isPrivate (property) {
+    return this.constructor._descriptors[property].private === true
+  }
+
+  __isDefaultReadOnly (property) {
+    return this.constructor._descriptors[property].readOnly === true &&
+      this.constructor._descriptors[property].value != null
+  }
 }
 
-Object.defineProperty(Entity.prototype, '_descriptors', {
-  value: {},
-  enumerable: false,
-  configurable: false,
-  writable: false
+Entity.$({
+  'id': { readOnly: true },
+  'createdAt': { readOnly: true },
+  'updatedAt': { readOnly: true }
 })
-
-Object.defineProperty(Entity.prototype, '_propertyDescriptors', {
-  value: {},
-  enumerable: false,
-  configurable: false,
-  writable: false
-})
-
-Entity.$('id', { readOnly: true })
-Entity.$('createdAt', { readOnly: true })
-Entity.$('updatedAt', { readOnly: true })
 
 function ensureUnderscore (str) {
   return (str && str[0] !== '_') ? '_' + str : str
