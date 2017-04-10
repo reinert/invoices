@@ -2,12 +2,10 @@ const datasource = require('./datasource')
 const Sequelize = require('sequelize')
 
 const UserModel = datasource.define('user', {
-  username: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
   email: {
     type: Sequelize.STRING,
+    primaryKey: true,
+    allowNull: false,
     validate: {
       isEmail: { msg: 'Not a valid email' }
     }
@@ -25,7 +23,6 @@ const UserModel = datasource.define('user', {
   },
   isEncrypted: {
     type: Sequelize.BOOLEAN,
-    allowNull: false,
     defaultValue: false,
     validate: {
       isTrue: function (value) {
@@ -35,6 +32,14 @@ const UserModel = datasource.define('user', {
         }
       }
     }
+  },
+  firstName: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  lastName: {
+    type: Sequelize.STRING,
+    allowNull: false
   }
 })
 

@@ -11,13 +11,13 @@ describe('UserModel', () => {
   let user = null
 
   beforeEach(() => {
-    user = new User({ username: 'Test Name', email: 'test@email.com' })
+    user = new User({ email: 'test@email.com' })
   })
 
-  it('save throws error when creating a user with username not set', () => {
-    user.username = null
+  it('save throws error when creating a user with email not set', () => {
+    user.email = null
     let p = Repository.save(user)
-    return expect(p).to.be.rejectedWith('username cannot be null')
+    return expect(p).to.be.rejectedWith('email cannot be null')
   })
 
   it('save throws error when creating a user with password not set', () => {

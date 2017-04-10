@@ -20,16 +20,16 @@ class User extends Entity {
   }
 
   toString () {
-    return `User: {id: ${this.id}, username: ${this.username}, ` +
-      `email: ${this.email} }`
+    return `User: {id: ${this.id}, email: ${this.email} }`
   }
 }
 
 User.$({
-  'username': {},
   'email': {},
   'password': { private: true },
-  'isEncrypted': { private: true }
+  'isEncrypted': { private: true },
+  'firstName': {},
+  'lastName': {}
 })
 
 module.exports = User
