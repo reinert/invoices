@@ -4,7 +4,7 @@ const Sequelize = require('sequelize')
 const UserModel = datasource.define('user', {
   email: {
     type: Sequelize.STRING,
-    primaryKey: true,
+    unique: true,
     allowNull: false,
     validate: {
       isEmail: { msg: 'Not a valid email' }
