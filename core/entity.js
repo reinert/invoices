@@ -30,6 +30,10 @@ class Entity {
    *                          using {@link _set} with force = true.
    *   # {*} value - the default value of the property; when set along with
    *                 readOnly as true, it cannot be written in construction.
+   *   # {function} computed - defines a property that performs some computation
+   *                           upon previously declared properties. The
+   *                           arguments' names must be equal to the properties'
+   *                           names in which the function depends.
    *
    * @see {@link _set}
    * @typedef {object.<string, *>} descriptor
@@ -74,15 +78,33 @@ class Entity {
       set: function (value) { this._holder.set(property, value) }
     }
 
-    if (descriptor) {
-      if (descriptor.private) {
-        d.enumerable = false
-        d.accessor = ensureUnderscore(property)
+    if (descriptor.private) {
+      d.enumerable = false
+      d.accessor = ensureUnderscore(property)
+    }
+
+    if (descriptor.computed) {
+      assert(typeof descriptor.computed === 'function',
+        `${property}'s "computed" must be a function`)
+
+      const args = getArgNames(descriptor.computed)
+      for (let p of args) {
+        assert(this._descriptors.hasOwnProperty(p),
+          `argument "${p}" in ${property}'s computed function could not be ` +
+          `resolved. Please make sure the property "${p}" is declared before ` +
+          `"${property}" in the Entity initialization.`)
       }
 
-      if (descriptor.readOnly) {
-        delete d.set
+      d.get = function () {
+        return descriptor.computed(...args.map(p => this[p]))
       }
+
+      // readOnly by default when computed
+      descriptor.readOnly = true
+    }
+
+    if (descriptor.readOnly) {
+      delete d.set
     }
 
     this._propertyDescriptors[property] = d
@@ -150,7 +172,8 @@ class Entity {
    */
   _set (property, value, force) {
     if (this.constructor._descriptors.hasOwnProperty(property)) {
-      if (this.constructor._descriptors[property].readOnly ? force : true) {
+      const d = this.constructor._descriptors[property]
+      if (!d.computed && (d.readOnly ? force : true)) {
         this._holder.set(property, value)
         return true
       }
@@ -218,6 +241,16 @@ function ensureUnderscore (str) {
 // Holder duck type check
 function isHolder (obj) {
   return typeof obj.set === 'function' && typeof obj.get === 'function'
+}
+
+const STRIP_COMMENTS = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,)]*))/mg
+const ARGUMENT_NAMES = /([^\s,]+)/g
+function getArgNames (func) {
+  let fnStr = func.toString().replace(STRIP_COMMENTS, '')
+  let result = fnStr
+    .slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')'))
+    .match(ARGUMENT_NAMES)
+  return result === null ? [] : result
 }
 
 module.exports = Entity

@@ -1,8 +1,37 @@
 /* global describe it */
 const chai = require('chai')
 const Entity = require('../../core/entity')
+const AssertionError = require('assert').AssertionError
 
 const expect = chai.expect
+
+describe('Entity Static', () => {
+  it('computed must be a function', () => {
+    class Test extends Entity {}
+    expect(() => Test.$({
+      'badComputed': { computed: 'bad' }
+    })).to.throw(AssertionError, '"computed" must be a function')
+  })
+
+  it('computed properties must be declared after dependent properties', () => {
+    class Test extends Entity {}
+    expect(() => Test.$({
+      'a': {},
+      'badComputed': { computed: (a, b) => a + b },
+      'b': {}
+    })).to.throw(AssertionError, 'computed function could not be resolved')
+  })
+
+  it('computed properties are readOnly', () => {
+    class Test extends Entity {}
+    Test.$({
+      'a': {},
+      'b': {},
+      'ab': { computed: (a, b) => a + b }
+    })
+    expect(Test._descriptors.ab.readOnly).to.be.equal(true)
+  })
+})
 
 describe('Entity Constructor Function',
   testEntityConstructorProps(Entity))
@@ -16,7 +45,10 @@ Thing.$({
   'vl': { value: 'test' },
   'rly': { readOnly: true },
   'rlyVl': { readOnly: true, value: 'test' },
-  'pvt': { private: true }
+  'pvt': { private: true },
+  'a': {},
+  'b': {},
+  'ab': { computed: (a, b) => a + b }
 })
 
 describe('Entity Inheritance Constructor Function',
@@ -38,7 +70,8 @@ class Parent extends Entity {}
 Parent.$({
   'normal': {},
   'vl': { value: 'test' },
-  'rlyVl': { readOnly: true }
+  'rlyVl': { readOnly: true },
+  'a': {}
 })
 
 class Child extends Parent {}
@@ -47,7 +80,9 @@ Child.$({
   // 'rlyVl' accumulates both 'value' and 'readOnly'
   // because in parent it's already defined as readOnly
   'rlyVl': { value: 'test' },
-  'pvt': { private: true }
+  'pvt': { private: true },
+  'b': {},
+  'ab': { computed: (a, b) => a + b }
 })
 
 describe('Entity Inheritance Constructor Function',
@@ -130,7 +165,8 @@ function testDescriptors (Clazz) {
       () => {
         let instance = new Clazz({ rlyVl: 123 })
         expect(instance.rlyVl).to.be.equal('test')
-      })
+      }
+    )
 
     it('readOnly prop can be written by using _set(force = true)', () => {
       let instance = new Clazz()
@@ -148,12 +184,18 @@ function testDescriptors (Clazz) {
       () => {
         let instance = new Clazz({ pvt: 123, _pvt: 123 })
         expect(instance._pvt).to.be.equal(undefined)
-      })
+      }
+    )
 
     it('private property can be written privately', () => {
       let instance = new Clazz()
       instance._pvt = 123
       expect(instance._pvt).to.be.equal(123)
+    })
+
+    it('computed properties work properly', () => {
+      let instance = new Clazz({ a: 1, b: 2 })
+      expect(instance.ab).to.be.equal(3)
     })
   }
 }
@@ -220,6 +262,13 @@ function testPublicMethods (Clazz) {
 
 function testProtectedMethods (Clazz) {
   return () => {
+    it('computed is not written using _set', () => {
+      let instance = new Clazz()
+      instance._set('ab', 123)
+
+      expect(instance.ab).to.be.not.equal(123)
+    })
+
     it('readOnly is not written using _set', () => {
       let instance = new Clazz()
       instance._set('rly', 123)
