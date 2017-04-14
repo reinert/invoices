@@ -7,29 +7,49 @@ const expect = chai.expect
 
 describe('Entity Static', () => {
   it('computed must be a function', () => {
-    class Test extends Entity {}
-    expect(() => Test.$({
-      'badComputed': { computed: 'bad' }
-    })).to.throw(AssertionError, '"computed" must be a function')
+    class Test extends Entity {
+      static get properties () {
+        return {
+          'malformedComputed': {
+            type: String,
+            computed: 'bad'
+          }
+        }
+      }
+    }
+    expect(() => new Test()).to.throw(AssertionError, '"computed" must be a function')
   })
 
   it('computed properties must be declared after dependent properties', () => {
-    class Test extends Entity {}
-    expect(() => Test.$({
-      'a': {},
-      'badComputed': { computed: (a, b) => a + b },
-      'b': {}
-    })).to.throw(AssertionError, 'computed function could not be resolved')
+    class Test extends Entity {
+      static get properties () {
+        return {
+          'a': { type: Number },
+          'ab': {
+            type: Number,
+            computed: (a, b) => a + b
+          },
+          'b': { type: Number }
+        }
+      }
+    }
+    expect(() => new Test()).to.throw(AssertionError, 'computed function could not be resolved')
   })
 
   it('computed properties are readOnly', () => {
-    class Test extends Entity {}
-    Test.$({
-      'a': {},
-      'b': {},
-      'ab': { computed: (a, b) => a + b }
-    })
-    expect(Test._descriptors.ab.readOnly).to.be.equal(true)
+    class Test extends Entity {
+      static get properties () {
+        return {
+          'a': { type: Number },
+          'b': { type: Number },
+          'ab': {
+            type: Number,
+            computed: (a, b) => a + b
+          }
+        }
+      }
+    }
+    expect(new Test().constructor._descriptors.ab.readOnly).to.be.equal(true)
   })
 })
 
@@ -39,17 +59,23 @@ describe('Entity Constructor Function',
 describe('Entity Instance',
   testEntityInstanceProps(Entity))
 
-class Thing extends Entity {}
-Thing.$({
-  'normal': {},
-  'vl': { value: 'test' },
-  'rly': { readOnly: true },
-  'rlyVl': { readOnly: true, value: 'test' },
-  'pvt': { private: true },
-  'a': {},
-  'b': {},
-  'ab': { computed: (a, b) => a + b }
-})
+class Thing extends Entity {
+  static get properties () {
+    return {
+      'normal': { type: String },
+      'vl': { type: String, value: 'test' },
+      'rly': { type: String, readOnly: true },
+      'rlyVl': { type: String, readOnly: true, value: 'test' },
+      'pvt': { type: Number, private: true },
+      'a': { type: Number },
+      'b': { type: Number },
+      'ab': {
+        type: Number,
+        computed: (a, b) => a + b
+      }
+    }
+  }
+}
 
 describe('Entity Inheritance Constructor Function',
   testEntityConstructorProps(Thing))
@@ -66,24 +92,33 @@ describe('Entity Inheritance Public Methods',
 describe('Entity Inheritance Protected Methods',
   testProtectedMethods(Thing))
 
-class Parent extends Entity {}
-Parent.$({
-  'normal': {},
-  'vl': { value: 'test' },
-  'rlyVl': { readOnly: true },
-  'a': {}
-})
+class Parent extends Entity {
+  static get properties () {
+    return {
+      'normal': { type: String },
+      'vl': { type: String, value: 'test' },
+      'rlyVl': { type: String, readOnly: true, value: 'test' },
+      'a': { type: Number }
+    }
+  }
+}
 
-class Child extends Parent {}
-Child.$({
-  'rly': { readOnly: true },
-  // 'rlyVl' accumulates both 'value' and 'readOnly'
-  // because in parent it's already defined as readOnly
-  'rlyVl': { value: 'test' },
-  'pvt': { private: true },
-  'b': {},
-  'ab': { computed: (a, b) => a + b }
-})
+class Child extends Parent {
+  static get properties () {
+    return {
+      'rly': { type: String, readOnly: true },
+      // 'rlyVl' accumulates both 'value' and 'readOnly'
+      // because in parent it's already defined as readOnly
+      'rlyVl': { type: String, readOnly: true, value: 'test' },
+      'pvt': { type: Number, private: true },
+      'b': { type: Number },
+      'ab': {
+        type: Number,
+        computed: (a, b) => a + b
+      }
+    }
+  }
+}
 
 describe('Entity Inheritance Constructor Function',
   testEntityConstructorProps(Child))
@@ -103,12 +138,12 @@ describe('Entity Two Level Inheritance Protected Methods',
 function testEntityConstructorProps (Clazz) {
   return () => {
     it("has '_descriptors' and '_propertyDescriptors'", () => {
-      expect(Clazz).to.have.ownProperty('_descriptors')
+      expect(new Clazz().constructor).to.have.ownProperty('_descriptors')
       expect(Clazz).to.have.ownProperty('_propertyDescriptors')
     })
 
     it("has '_descriptors' filled with 'id', 'createdAt' and 'updatedAt'", () => {
-      expect(Clazz).to.have.deep.property('_descriptors.id')
+      expect(new Clazz().constructor).to.have.deep.property('_descriptors.id')
       expect(Clazz).to.have.deep.property('_descriptors.createdAt')
       expect(Clazz).to.have.deep.property('_descriptors.updatedAt')
     })
@@ -152,26 +187,26 @@ function testDescriptors (Clazz) {
 
     it('readOnly prop cannot be written', () => {
       let instance = new Clazz()
-      instance.rly = 123
+      instance.rly = 'newRly'
       expect(instance.rly).to.be.equal(undefined)
     })
 
     it('readOnly prop can be written in construction if not defined yet', () => {
-      let instance = new Clazz({ rly: 123 })
-      expect(instance.rly).to.be.equal(123)
+      let instance = new Clazz({ rly: 'newRly' })
+      expect(instance.rly).to.be.equal('newRly')
     })
 
     it('readOnly prop cannot be written in construction if already defined',
       () => {
-        let instance = new Clazz({ rlyVl: 123 })
+        let instance = new Clazz({ rlyVl: 'newRly' })
         expect(instance.rlyVl).to.be.equal('test')
       }
     )
 
     it('readOnly prop can be written by using _set(force = true)', () => {
       let instance = new Clazz()
-      instance._set('rly', 123, true)
-      expect(instance.rly).to.be.equal(123)
+      instance._set('rly', 'newRly', true)
+      expect(instance.rly).to.be.equal('newRly')
     })
 
     it('private property cannot be seen publicly', () => {
@@ -278,9 +313,9 @@ function testProtectedMethods (Clazz) {
 
     it('readOnly is written using _set(force = true)', () => {
       let instance = new Clazz()
-      instance._set('rly', 123, true)
+      instance._set('rly', 'newRly', true)
 
-      expect(instance.rly).to.be.equal(123)
+      expect(instance.rly).to.be.equal('newRly')
     })
 
     it('private property is written using _set', () => {

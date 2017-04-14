@@ -3,8 +3,26 @@ const Holder = require('./holder')
 
 class Entity {
   constructor (values) {
+    this.constructor.$()
     this.__initHolder(values || {})
     this.__initProperties()
+  }
+
+  static get properties () {
+    return {
+      'id': {
+        type: Number,
+        readOnly: true
+      },
+      'createdAt': {
+        type: Date,
+        readOnly: true
+      },
+      'updatedAt': {
+        type: Date,
+        readOnly: true
+      }
+    }
   }
 
   /**
@@ -39,11 +57,15 @@ class Entity {
    * @typedef {object.<string, *>} descriptor
    * @param {object.<string, descriptor>} propertyDescriptorDict
    */
-  static $ (propertyDescriptorDict) {
-    assert(!this.hasOwnProperty('_descriptors'),
-      'Entity Inheritor already initialized. $ must be called only once.')
+  static $ () {
+    if (this.hasOwnProperty('_descriptors')) return
 
     const proto = Object.getPrototypeOf(this)
+
+    if (!proto.hasOwnProperty('_descriptors') &&
+        proto.prototype instanceof Entity) {
+      proto.$()
+    }
 
     Object.defineProperty(this, '_descriptors', {
       value: Object.assign({}, proto._descriptors),
@@ -59,8 +81,8 @@ class Entity {
       writable: false
     })
 
-    for (let p in propertyDescriptorDict) {
-      this.__processDescriptor(p, propertyDescriptorDict[p])
+    for (let p in this.properties) {
+      this.__processDescriptor(p, this.properties[p])
     }
   }
 
@@ -75,7 +97,9 @@ class Entity {
       enumerable: true,
       configurable: true,
       get: function () { return this._holder.get(property) },
-      set: function (value) { this._holder.set(property, value) }
+      set: function (value) {
+        this._holder.set(property, this.__coerce(property, value))
+      }
     }
 
     if (descriptor.private) {
@@ -174,7 +198,7 @@ class Entity {
     if (this.constructor._descriptors.hasOwnProperty(property)) {
       const d = this.constructor._descriptors[property]
       if (!d.computed && (d.readOnly ? force : true)) {
-        this._holder.set(property, value)
+        this._holder.set(property, this.__coerce(property, value))
         return true
       }
     }
@@ -226,13 +250,52 @@ class Entity {
     return this.constructor._descriptors[property].readOnly === true &&
       this.constructor._descriptors[property].value != null
   }
+
+  __coerce (property, value) {
+    if (value == null) return value
+
+    let Type = this.constructor._descriptors[property].type
+    switch (Type) {
+      case String: {
+        if (!(typeof value === 'string' || value instanceof String)) {
+          return value + ''
+        }
+        return value
+      }
+      case Number: {
+        if (!(typeof value === 'number' || value instanceof Number)) {
+          return Number.isInteger(value)
+                 ? Number.parseInt(value)
+                 : Number.parseFloat(value)
+        }
+        return value
+      }
+      case Boolean: {
+        if (!(typeof value === 'boolean' || value instanceof Boolean)) {
+          return !!value
+        }
+        return value
+      }
+      case Date: {
+        if (!(value instanceof Date)) {
+          return new Date(value)
+        }
+        return value
+      }
+      case Array: {
+        if (!Array.isArray(value)) {
+          throw new TypeError(`Property ${property} value must be of type ${Type}.`)
+        }
+        return value
+      }
+      default: {
+        return new Type(value)
+      }
+    }
+  }
 }
 
-Entity.$({
-  'id': { readOnly: true },
-  'createdAt': { readOnly: true },
-  'updatedAt': { readOnly: true }
-})
+Entity.$()
 
 function ensureUnderscore (str) {
   return (str && str[0] !== '_') ? '_' + str : str
