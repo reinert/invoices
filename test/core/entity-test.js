@@ -228,8 +228,17 @@ function testDescriptors (Clazz) {
       expect(instance._pvt).to.be.equal(123)
     })
 
-    it('computed properties work properly', () => {
+    it('computed properties work properly on Contruction', () => {
       let instance = new Clazz({ a: 1, b: 2 })
+      expect(instance.ab).to.be.equal(3)
+    })
+
+    it('computed properties work properly after Contruction', () => {
+      let instance = new Clazz()
+      expect(instance.ab).to.be.equal(undefined)
+      instance.a = 1
+      expect(Number.isNaN(instance.ab)).to.be.equal(false)
+      instance.b = 2
       expect(instance.ab).to.be.equal(3)
     })
   }

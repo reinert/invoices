@@ -1,5 +1,6 @@
 const assert = require('assert')
 const Holder = require('./holder')
+const LeanEventEmitter = require('./lean-event-emitter')
 
 class Entity {
   constructor (values) {
@@ -97,9 +98,7 @@ class Entity {
       enumerable: true,
       configurable: true,
       get: function () { return this._holder.get(property) },
-      set: function (value) {
-        this._holder.set(property, this.__coerce(property, value))
-      }
+      set: function (value) { this.__set(property, value) }
     }
 
     if (descriptor.private) {
@@ -118,10 +117,7 @@ class Entity {
           `resolved. Please make sure the property "${p}" is declared before ` +
           `"${property}" in the Entity initialization.`)
       }
-
-      d.get = function () {
-        return descriptor.computed(...args.map(p => this[p]))
-      }
+      descriptor._events = args
 
       // readOnly by default when computed
       descriptor.readOnly = true
@@ -198,11 +194,18 @@ class Entity {
     if (this.constructor._descriptors.hasOwnProperty(property)) {
       const d = this.constructor._descriptors[property]
       if (!d.computed && (d.readOnly ? force : true)) {
-        this._holder.set(property, this.__coerce(property, value))
+        this.__set(property, value)
         return true
       }
     }
     return false
+  }
+
+  __set (property, value) {
+    const newValue = this.__coerce(property, value)
+    const oldValue = this._holder.get(property)
+    this._holder.set(property, newValue)
+    this._propertyChangeHandlers.emit(property, newValue, oldValue)
   }
 
   __initHolder (values) {
@@ -219,13 +222,43 @@ class Entity {
   }
 
   __initProperties () {
+    this._propertyChangeHandlers = new LeanEventEmitter()
+
     for (let p in this.constructor._descriptors) {
-      let descriptor = this.constructor._propertyDescriptors[p]
+      let descriptor = this.constructor._descriptors[p]
+      let d = this.constructor._propertyDescriptors[p]
+
       // set property descriptor in this instance
-      Object.defineProperty(this, descriptor.accessor, descriptor)
+      Object.defineProperty(this, d.accessor, d)
+
+      // set computed properties
+      let allDepSet = true // flag to check if default value should be set
+      if (descriptor.hasOwnProperty('computed')) {
+        const listener = () => {
+          const depValues = []
+          for (let e of descriptor._events) {
+            const eValue = this._get(e)
+            // computed function is only called if all dependencies are set
+            if (eValue === undefined) return
+
+            depValues.push(eValue)
+          }
+
+          this.__set(p, descriptor.computed(...depValues))
+        }
+
+        for (let e of descriptor._events) {
+          this._propertyChangeHandlers.on(e, listener)
+          allDepSet &= this._get(e) !== undefined
+        }
+
+        // set computed default value on construction if dependencies are set
+        if (allDepSet) listener()
+      }
+
       // set default value if necessary
-      if (this.constructor._descriptors[p].value != null) {
-        this._holder.set(p, this.constructor._descriptors[p].value)
+      if (descriptor.value != null) {
+        this.__set(p, descriptor.value)
       }
     }
   }
