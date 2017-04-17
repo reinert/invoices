@@ -4,7 +4,7 @@ const LeanEventEmitter = require('./lean-event-emitter')
 
 class Entity {
   constructor (values) {
-    this.constructor.$()
+    this.constructor.initEntity()
     this.__initHolder(values || {})
     this.__initProperties()
   }
@@ -60,14 +60,14 @@ class Entity {
    * @typedef {object.<string, *>} descriptor
    * @param {object.<string, descriptor>} propertyDescriptorDict
    */
-  static $ () {
+  static initEntity () {
     if (this.hasOwnProperty('_descriptors')) return
 
     const proto = Object.getPrototypeOf(this)
 
     if (!proto.hasOwnProperty('_descriptors') &&
         proto.prototype instanceof Entity) {
-      proto.$()
+      proto.initEntity()
     }
 
     Object.defineProperty(this, '_descriptors', {
@@ -113,14 +113,14 @@ class Entity {
 
     if (descriptor.computed) {
       assert(typeof descriptor.computed === 'function',
-        `${property}'s "computed" must be a function`)
+        `initEntity{property}'s "computed" must be a function`)
 
       const args = getArgNames(descriptor.computed)
       for (let p of args) {
         assert(this._descriptors.hasOwnProperty(p),
-          `argument "${p}" in ${property}'s computed function could not be ` +
-          `resolved. Please make sure the property "${p}" is declared before ` +
-          `"${property}" in the Entity initialization.`)
+          `argument "initEntity{p}" in initEntity{property}'s computed function could not be ` +
+          `resolved. Please make sure the property "initEntity{p}" is declared before ` +
+          `"initEntity{property}" in the Entity initialization.`)
       }
       descriptor._events = args
 
@@ -343,7 +343,7 @@ class Entity {
       case Array: {
         if (!Array.isArray(value)) {
           throw new TypeError(
-            `${value} is of type ${typeof value}. It must be an array.`)
+            `initEntity{value} is of type initEntity{typeof value}. It must be an array.`)
         }
 
         const SubType = this.constructor._descriptors[property].subType
@@ -365,7 +365,7 @@ class Entity {
   }
 }
 
-Entity.$()
+Entity.initEntity()
 
 function ensureUnderscore (str) {
   return (str && str[0] !== '_') ? '_' + str : str
@@ -376,7 +376,7 @@ function isHolder (obj) {
   return typeof obj.set === 'function' && typeof obj.get === 'function'
 }
 
-const STRIP_COMMENTS = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,)]*))/mg
+const STRIP_COMMENTS = /(\/\/.*initEntity)|(\/\*[\s\S]*?\*\/)|(\s*=[^,)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,)]*))/mg
 const ARGUMENT_NAMES = /([^\s,]+)/g
 function getArgNames (func) {
   let fnStr = func.toString().replace(STRIP_COMMENTS, '')
