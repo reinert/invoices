@@ -17,7 +17,8 @@ describe('Entity Static', () => {
         }
       }
     }
-    expect(() => new Test()).to.throw(AssertionError, '"computed" must be a function')
+    expect(() => new Test()).to.throw(AssertionError,
+      '"computed" must be a function')
   })
 
   it('computed properties must be declared after dependent properties', () => {
@@ -33,7 +34,8 @@ describe('Entity Static', () => {
         }
       }
     }
-    expect(() => new Test()).to.throw(AssertionError, 'computed function could not be resolved')
+    expect(() => new Test()).to.throw(AssertionError,
+      'computed function could not be resolved')
   })
 
   it('computed properties are readOnly', () => {
@@ -50,6 +52,288 @@ describe('Entity Static', () => {
       }
     }
     expect(new Test().constructor._descriptors.ab.readOnly).to.be.equal(true)
+  })
+})
+
+describe('Entity __coerce on construction', () => {
+  class Custom extends Entity {
+    static get properties () {
+      return {
+        'name': String,
+        'age': Number
+      }
+    }
+
+    equals (o) {
+      return o != null && o.name === this.name && o.age === this.age
+    }
+  }
+
+  class Test extends Entity {
+    static get properties () {
+      return {
+        'str': String,
+        'int': Number,
+        'dbl': Number,
+        'bool': Boolean,
+        'date': Date,
+        'arr': Array,
+        'custom': Custom,
+        'customArr': { type: Array, subType: Custom }
+      }
+    }
+  }
+
+  it('String literal', () => {
+    const test = new Test({ str: 'literal' })
+    expect(test.str).to.be.equal('literal')
+  })
+
+  it('String coercion', () => {
+    const test = new Test({ str: 123 })
+    expect(test.str).to.be.equal('123')
+  })
+
+  it('Number literal', () => {
+    const test = new Test({ int: 123, dbl: 1.01 })
+    expect(test.int).to.be.equal(123)
+    expect(test.dbl).to.be.equal(1.01)
+  })
+
+  it('Number coercion', () => {
+    const test = new Test({ int: '123', dbl: '1.01' })
+    expect(test.int).to.be.equal(123)
+    expect(test.dbl).to.be.equal(1.01)
+  })
+
+  it('Boolean literal', () => {
+    const test = new Test({ bool: true })
+    expect(test.bool).to.be.equal(true)
+  })
+
+  it('Boolean coercion', () => {
+    const test = new Test({ bool: 1 })
+    expect(test.bool).to.be.equal(true)
+  })
+
+  it('Date type', () => {
+    const d = new Date()
+    const test = new Test({ date: d })
+    expect(test.date.getTime()).to.be.equal(d.getTime())
+  })
+
+  it('Date coercion', () => {
+    const t = new Date().getTime()
+    const test = new Test({ date: t })
+    expect(test.date.getTime()).to.be.equal(t)
+  })
+
+  it('Array type', () => {
+    const arr = [1, 2, 3]
+    const test = new Test({ arr: arr })
+    expect(test.arr.toString()).to.be.equal(arr.toString())
+  })
+
+  it('Array invalid value', () => {
+    const arr = '[1, 2, 3]'
+    expect(() => new Test({ arr: arr })).to.throw(TypeError,
+      'must be an array')
+  })
+
+  it('Custom type', () => {
+    const c = new Custom({ name: 'any', age: 9 })
+    const test = new Test({ custom: c })
+    expect(test.custom.equals(c)).to.be.equal(true)
+  })
+
+  it('Custom coercion', () => {
+    const c = new Custom({ name: 'any', age: 9 })
+    const test = new Test({ custom: { name: 'any', age: 9 } })
+    expect(test.custom instanceof Custom).to.be.equal(true)
+    expect(test.custom.equals(c)).to.be.equal(true)
+  })
+
+  it('Custom Array type', () => {
+    const arr = [
+      new Custom({ name: 'a', age: 1 }),
+      new Custom({ name: 'b', age: 2 })
+    ]
+    const test = new Test({ customArr: arr })
+    expect(test.customArr[0].equals(arr[0])).to.be.equal(true)
+    expect(test.customArr[1].equals(arr[1])).to.be.equal(true)
+  })
+
+  it('Custom Array coercion', () => {
+    const arr = [
+      new Custom({ name: 'a', age: 1 }),
+      new Custom({ name: 'b', age: 2 })
+    ]
+    const test = new Test({
+      customArr: [{ name: 'a', age: 1 }, { name: 'b', age: 2 }]
+    })
+    expect(test.customArr[0] instanceof Custom).to.be.equal(true)
+    expect(test.customArr[0].equals(arr[0])).to.be.equal(true)
+    expect(test.customArr[1] instanceof Custom).to.be.equal(true)
+    expect(test.customArr[1].equals(arr[1])).to.be.equal(true)
+  })
+})
+
+describe('Entity __coerce after construction', () => {
+  class Custom extends Entity {
+    static get properties () {
+      return {
+        'name': String,
+        'age': Number
+      }
+    }
+
+    equals (o) {
+      return o != null && o.name === this.name && o.age === this.age
+    }
+  }
+
+  class Test extends Entity {
+    static get properties () {
+      return {
+        'str': String,
+        'int': Number,
+        'dbl': Number,
+        'bool': Boolean,
+        'date': Date,
+        'arr': Array,
+        'custom': Custom,
+        'customArr': { type: Array, subType: Custom }
+      }
+    }
+  }
+
+  it('String literal', () => {
+    const test = new Test()
+    test.str = 'literal'
+
+    expect(test.str).to.be.equal('literal')
+  })
+
+  it('String coercion', () => {
+    const test = new Test()
+    test.str = 123
+
+    expect(test.str).to.be.equal('123')
+  })
+
+  it('Number literal', () => {
+    const test = new Test()
+    test.int = 123
+    test.dbl = 1.01
+
+    expect(test.int).to.be.equal(123)
+    expect(test.dbl).to.be.equal(1.01)
+  })
+
+  it('Number coercion', () => {
+    const test = new Test()
+    test.int = '123'
+    test.dbl = '1.01'
+
+    expect(test.int).to.be.equal(123)
+    expect(test.dbl).to.be.equal(1.01)
+  })
+
+  it('Boolean literal', () => {
+    const test = new Test()
+    test.bool = true
+
+    expect(test.bool).to.be.equal(true)
+  })
+
+  it('Boolean coercion', () => {
+    const test = new Test()
+    test.bool = 1
+
+    expect(test.bool).to.be.equal(true)
+  })
+
+  it('Date type', () => {
+    const d = new Date()
+
+    const test = new Test()
+    test.date = d
+
+    expect(test.date.getTime()).to.be.equal(d.getTime())
+  })
+
+  it('Date coercion', () => {
+    const t = new Date().getTime()
+
+    const test = new Test()
+    test.date = t
+
+    expect(test.date.getTime()).to.be.equal(t)
+  })
+
+  it('Array type', () => {
+    const arr = [1, 2, 3]
+
+    const test = new Test()
+    test.arr = arr
+
+    expect(test.arr.toString()).to.be.equal(arr.toString())
+  })
+
+  it('Array invalid value', () => {
+    const arr = '[1, 2, 3]'
+
+    const test = new Test()
+
+    expect(() => { test.arr = arr }).to.throw(TypeError,
+      'must be an array')
+  })
+
+  it('Custom type', () => {
+    const c = new Custom({ name: 'any', age: 9 })
+
+    const test = new Test()
+    test.custom = c
+
+    expect(test.custom.equals(c)).to.be.equal(true)
+  })
+
+  it('Custom coercion', () => {
+    const c = new Custom({ name: 'any', age: 9 })
+
+    const test = new Test()
+    test.custom = { name: 'any', age: 9 }
+
+    expect(test.custom instanceof Custom).to.be.equal(true)
+    expect(test.custom.equals(c)).to.be.equal(true)
+  })
+
+  it('Custom Array type', () => {
+    const arr = [
+      new Custom({ name: 'a', age: 1 }),
+      new Custom({ name: 'b', age: 2 })
+    ]
+
+    const test = new Test()
+    test.customArr = arr
+
+    expect(test.customArr[0].equals(arr[0])).to.be.equal(true)
+    expect(test.customArr[1].equals(arr[1])).to.be.equal(true)
+  })
+
+  it('Custom Array coercion', () => {
+    const arr = [
+      new Custom({ name: 'a', age: 1 }),
+      new Custom({ name: 'b', age: 2 })
+    ]
+
+    const test = new Test()
+    test.customArr = [{ name: 'a', age: 1 }, { name: 'b', age: 2 }]
+
+    expect(test.customArr[0] instanceof Custom).to.be.equal(true)
+    expect(test.customArr[0].equals(arr[0])).to.be.equal(true)
+    expect(test.customArr[1] instanceof Custom).to.be.equal(true)
+    expect(test.customArr[1].equals(arr[1])).to.be.equal(true)
   })
 })
 
@@ -167,8 +451,8 @@ function testEntityInstanceProps (Clazz) {
     })
 
     it("properties' values should not be mixed in multiple instances", () => {
-      let a = new Clazz({id: 1})
-      let b = new Clazz({id: 2})
+      let a = new Clazz({ id: 1 })
+      let b = new Clazz({ id: 2 })
       expect(a).to.have.property('id', 1)
       expect(b).to.have.property('id', 2)
     })
@@ -215,7 +499,7 @@ function testDescriptors (Clazz) {
       expect(instance).to.not.have.ownProperty('pvt')
     })
 
-    it('private prop cannot be written in construction',
+    it('private property cannot be written in construction',
       () => {
         let instance = new Clazz({ pvt: 123, _pvt: 123 })
         expect(instance._pvt).to.be.equal(undefined)

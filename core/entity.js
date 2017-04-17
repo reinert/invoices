@@ -39,6 +39,8 @@ class Entity {
    *   }
    *
    * Valid descriptor's attributes are:
+   *   # {function} type - the type of the property.
+   *   # {function} subType - the type of the items of a collection property.
    *   # {boolean} private - when true, the property is only accessible
    *                         with an underline before, e.g.: inst._privProp;
    *                         also it cannot be written in construction.
@@ -90,6 +92,9 @@ class Entity {
   static __processDescriptor (property, descriptor) {
     assert(descriptor != null, 'descriptor cannot be null')
 
+    // Check for type alias descriptor
+    if (typeof descriptor === 'function') descriptor = { type: descriptor }
+
     this._descriptors[property] =
       Object.assign(descriptor, this._descriptors[property])
 
@@ -118,6 +123,18 @@ class Entity {
           `"${property}" in the Entity initialization.`)
       }
       descriptor._events = args
+
+      // a computed getter ensures it has been initialized
+      d.get = function () {
+        const value = this._holder.get(property)
+        if (value !== undefined) return value
+
+        // compute value if property has not been initialized yet
+        const listeners = this._propertyChangeHandlers.getListeners(args[0])
+        if (listeners.length > 0) listeners[0]()
+
+        return this._holder.get(property)
+      }
 
       // readOnly by default when computed
       descriptor.readOnly = true
@@ -266,9 +283,12 @@ class Entity {
   __sanitize (values) {
     if (values) {
       for (let p in values) {
-        if (this.constructor._descriptors[p] &&
-            (this.__isPrivate(p) || this.__isDefaultReadOnly(p))) {
-          delete values[p]
+        if (this.constructor._descriptors[p]) {
+          if (this.__isPrivate(p) || this.__isDefaultReadOnly(p)) {
+            delete values[p]
+          } else {
+            values[p] = this.__coerce(p, values[p])
+          }
         }
       }
     }
@@ -287,42 +307,59 @@ class Entity {
   __coerce (property, value) {
     if (value == null) return value
 
-    let Type = this.constructor._descriptors[property].type
+    const Type = this.constructor._descriptors[property].type
+
     switch (Type) {
       case String: {
         if (!(typeof value === 'string' || value instanceof String)) {
           return value + ''
         }
+
         return value
       }
       case Number: {
         if (!(typeof value === 'number' || value instanceof Number)) {
           return Number.isInteger(value)
-                 ? Number.parseInt(value)
-                 : Number.parseFloat(value)
+            ? Number.parseInt(value)
+            : Number.parseFloat(value)
         }
+
         return value
       }
       case Boolean: {
         if (!(typeof value === 'boolean' || value instanceof Boolean)) {
           return !!value
         }
+
         return value
       }
       case Date: {
         if (!(value instanceof Date)) {
           return new Date(value)
         }
+
         return value
       }
       case Array: {
         if (!Array.isArray(value)) {
-          throw new TypeError(`Property ${property} value must be of type ${Type}.`)
+          throw new TypeError(
+            `${value} is of type ${typeof value}. It must be an array.`)
         }
+
+        const SubType = this.constructor._descriptors[property].subType
+        if (SubType != null &&
+          value.length > 0 &&
+          !(value[0] instanceof SubType)) {
+          for (let i = 0; i < value.length; ++i) {
+            // TODO: register observers
+            value[i] = new SubType(value[i])
+          }
+        }
+
         return value
       }
       default: {
-        return new Type(value)
+        return value instanceof Type ? value : new Type(value)
       }
     }
   }

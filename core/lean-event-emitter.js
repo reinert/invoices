@@ -18,6 +18,14 @@ class LeanEventEmitter {
 
     return true
   }
+
+  getListeners (event) {
+    if (!this.hasOwnProperty(event)) {
+      return []
+    }
+
+    return this[event]
+  }
 }
 
 module.exports = LeanEventEmitter
