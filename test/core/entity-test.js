@@ -356,7 +356,8 @@ class Thing extends Entity {
       'ab': {
         type: Number,
         computed: (a, b) => a + b
-      }
+      },
+      'notifies': { type: String, notify: true }
     }
   }
 }
@@ -382,7 +383,8 @@ class Parent extends Entity {
       'normal': { type: String },
       'vl': { type: String, value: 'test' },
       'rlyVl': { type: String, readOnly: true, value: 'test' },
-      'a': { type: Number }
+      'a': { type: Number },
+      'notifies': { type: String, notify: true }
     }
   }
 }
@@ -460,8 +462,8 @@ function testEntityInstanceProps (Clazz) {
 }
 
 function testDescriptors (Clazz) {
-  return () => {
-    it('has declared properties', () => {
+  return function () {
+    it('has declared properties', function () {
       let instance = new Clazz()
       expect(instance).to.have.ownProperty('vl')
       expect(instance).to.have.ownProperty('rly')
@@ -469,61 +471,77 @@ function testDescriptors (Clazz) {
       expect(instance).to.have.ownProperty('_pvt')
     })
 
-    it('readOnly prop cannot be written', () => {
+    it('readOnly prop cannot be written', function () {
       let instance = new Clazz()
       instance.rly = 'newRly'
       expect(instance.rly).to.be.equal(undefined)
     })
 
-    it('readOnly prop can be written in construction if not defined yet', () => {
-      let instance = new Clazz({ rly: 'newRly' })
-      expect(instance.rly).to.be.equal('newRly')
-    })
+    it('readOnly prop can be written in construction if not defined yet',
+      function () {
+        let instance = new Clazz({ rly: 'newRly' })
+        expect(instance.rly).to.be.equal('newRly')
+      })
 
     it('readOnly prop cannot be written in construction if already defined',
-      () => {
+      function () {
         let instance = new Clazz({ rlyVl: 'newRly' })
         expect(instance.rlyVl).to.be.equal('test')
       }
     )
 
-    it('readOnly prop can be written by using _set(force = true)', () => {
+    it('readOnly prop can be written by using _set(force = true)', function () {
       let instance = new Clazz()
       instance._set('rly', 'newRly', true)
       expect(instance.rly).to.be.equal('newRly')
     })
 
-    it('private property cannot be seen publicly', () => {
+    it('private property cannot be seen publicly', function () {
       let instance = new Clazz()
       expect(instance).to.have.ownProperty('_pvt')
       expect(instance).to.not.have.ownProperty('pvt')
     })
 
     it('private property cannot be written in construction',
-      () => {
+      function () {
         let instance = new Clazz({ pvt: 123, _pvt: 123 })
         expect(instance._pvt).to.be.equal(undefined)
       }
     )
 
-    it('private property can be written privately', () => {
+    it('private property can be written privately', function () {
       let instance = new Clazz()
       instance._pvt = 123
       expect(instance._pvt).to.be.equal(123)
     })
 
-    it('computed properties work properly on Contruction', () => {
+    it('computed properties work properly on Contruction', function () {
       let instance = new Clazz({ a: 1, b: 2 })
       expect(instance.ab).to.be.equal(3)
     })
 
-    it('computed properties work properly after Contruction', () => {
+    it('computed properties work properly after Contruction', function () {
       let instance = new Clazz()
       expect(instance.ab).to.be.equal(undefined)
       instance.a = 1
       expect(Number.isNaN(instance.ab)).to.be.equal(false)
       instance.b = 2
       expect(instance.ab).to.be.equal(3)
+    })
+
+    it('notify fires a change event when property is changed', function (done) {
+      this.timeout(100)
+
+      let instance = new Clazz({ notifies: 'first' })
+
+      instance.on('notifiesChanged', function (value, oldValue) {
+        expect(this).to.be.equal(instance)
+        expect(value).to.be.equal('second')
+        expect(oldValue).to.be.equal('first')
+        done()
+      })
+
+      instance.notifies = 'second'
     })
   }
 }

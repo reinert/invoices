@@ -1,9 +1,11 @@
 const assert = require('assert')
+const EventEmitter = require('events')
 const Holder = require('./holder')
 const LeanEventEmitter = require('./lean-event-emitter')
 
-class Entity {
+class Entity extends EventEmitter {
   constructor (values) {
+    super()
     this.constructor.initEntity()
     this.__initHolder(values || {})
     this.__initProperties()
@@ -49,6 +51,8 @@ class Entity {
    *                          still it can be written in construction;
    *                          additionally its possible to write over it
    *                          using {@link _set} with force = true.
+   *   # {boolean} notify - when true, a change event named '{property}Changed'
+   *                        is fired whenever the property is changed.
    *   # {*} value - the default value of the property; when set along with
    *                 readOnly as true, it cannot be written in construction.
    *   # {function} computed - defines a property that performs some computation
@@ -223,6 +227,9 @@ class Entity {
     const oldValue = this._holder.get(property)
     this._holder.set(property, newValue)
     this._propertyChangeHandlers.emit(property, newValue, oldValue)
+    if (this.constructor._descriptors[property].notify) {
+      this.emit(`${property}Changed`, newValue, oldValue)
+    }
   }
 
   __initHolder (values) {
