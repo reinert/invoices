@@ -53,8 +53,12 @@ describe('DetailedInvoice', () => {
       ]
     })
 
-    di.removeItem(0)
+    di.removeItem(1)
 
-    expect(di).to.have.property('amount', 10.00)
+    expect(di).to.have.property('amount', 1.00)
+
+    di.removeItem(di.getItem(0))
+
+    expect(di).to.have.property('amount', 0.00)
   })
 })
