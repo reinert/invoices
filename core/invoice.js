@@ -17,7 +17,8 @@ class Invoice extends Entity {
         type: Number
       },
       'amount': {
-        type: Number
+        type: Number,
+        value: 0.00
       },
       'providerName': {
         type: String

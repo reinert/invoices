@@ -289,15 +289,15 @@ class Entity extends EventEmitter {
 
   __sanitize (values) {
     if (values) {
+      const sanitized = {}
       for (let p in values) {
         if (this.constructor._descriptors[p]) {
-          if (this.__isPrivate(p) || this.__isDefaultReadOnly(p)) {
-            delete values[p]
-          } else {
-            values[p] = this.__coerce(p, values[p])
+          if (!(this.__isPrivate(p) || this.__isDefaultReadOnly(p))) {
+            sanitized[p] = this.__coerce(p, values[p])
           }
         }
       }
+      values = sanitized
     }
     return values
   }
@@ -312,9 +312,13 @@ class Entity extends EventEmitter {
   }
 
   __coerce (property, value) {
-    if (value == null) return value
+    const type = this.constructor._descriptors[property].type
+    const subType = this.constructor._descriptors[property].subType
+    return this._coerce(value, type, subType)
+  }
 
-    const Type = this.constructor._descriptors[property].type
+  _coerce (value, Type, SubType) {
+    if (value == null) return value
 
     switch (Type) {
       case String: {
@@ -353,7 +357,6 @@ class Entity extends EventEmitter {
             `${value} is of type ${typeof value}. It must be an array.`)
         }
 
-        const SubType = this.constructor._descriptors[property].subType
         if (SubType != null &&
           value.length > 0 &&
           !(value[0] instanceof SubType)) {

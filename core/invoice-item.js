@@ -1,19 +1,28 @@
 const Entity = require('./entity')
 
 class InvoiceItem extends Entity {
+  static get properties () {
+    return {
+      'description': {
+        type: String
+      },
+      'quantity': {
+        type: Number
+      },
+      'unitPrice': {
+        type: Number
+      },
+      'amount': {
+        type: Number,
+        computed: (quantity, unitPrice) => quantity * unitPrice
+      }
+    }
+  }
+
   toString () {
-    return `Invoice: {id: ${this.id}, description: ${this.description}, ` +
+    return `InvoiceItem: {id: ${this.id}, description: ${this.description}, ` +
       `amount: ${this.amount} }`
   }
 }
-
-InvoiceItem.$({
-  'description': {},
-  'quantity': {},
-  'unitPrice': {},
-  'amount': {
-    computed: (quantity, unitPrice) => quantity * unitPrice
-  }
-})
 
 module.exports = InvoiceItem
