@@ -176,6 +176,16 @@ describe('Entity __coerce on construction', () => {
     expect(test.customArr[1] instanceof Custom).to.be.equal(true)
     expect(test.customArr[1].equals(arr[1])).to.be.equal(true)
   })
+
+  it('Custom Array coercion on new items', () => {
+    const expected = new Custom({ name: 'a', age: 1 })
+
+    const test = new Test({ customArr: [] })
+    test.customArr.push({ name: 'a', age: 1 })
+
+    expect(test.customArr[0] instanceof Custom).to.be.equal(true)
+    expect(test.customArr[0].equals(expected)).to.be.equal(true)
+  })
 })
 
 describe('Entity __coerce after construction', () => {
@@ -335,6 +345,17 @@ describe('Entity __coerce after construction', () => {
     expect(test.customArr[1] instanceof Custom).to.be.equal(true)
     expect(test.customArr[1].equals(arr[1])).to.be.equal(true)
   })
+
+  it('Custom Array coercion on new items', () => {
+    const expected = new Custom({ name: 'a', age: 1 })
+
+    const test = new Test()
+    test.customArr = []
+    test.customArr.push({ name: 'a', age: 1 })
+
+    expect(test.customArr[0] instanceof Custom).to.be.equal(true)
+    expect(test.customArr[0].equals(expected)).to.be.equal(true)
+  })
 })
 
 describe('Entity Constructor Function',
@@ -384,7 +405,8 @@ class Parent extends Entity {
       'vl': { type: String, value: 'test' },
       'rlyVl': { type: String, readOnly: true, value: 'test' },
       'a': { type: Number },
-      'notifies': { type: String, notify: true }
+      'notifies': { type: String, notify: true },
+      'arr': { type: Array, subType: Thing }
     }
   }
 }

@@ -357,18 +357,29 @@ class Entity extends EventEmitter {
             `${value} is of type ${typeof value}. It must be an array.`)
         }
 
-        if (SubType != null &&
-          value.length > 0 &&
-          !(value[0] instanceof SubType)) {
-          for (let i = 0; i < value.length; ++i) {
-            // TODO: register observers
-            value[i] = new SubType(value[i])
+        if (SubType != null) {
+          if (value.length > 0 && !(value[0] instanceof SubType)) {
+            for (let i = 0; i < value.length; ++i) {
+              value[i] = this._coerce(value[i], SubType)
+            }
           }
+          const self = this
+          value = new Proxy(value, {
+            set (target, key, value) {
+              if (!isNaN(parseFloat(key)) && isFinite(key)) {
+                if (!(value instanceof SubType)) {
+                  value = self._coerce(value, SubType)
+                }
+              }
+              return Reflect.set(target, key, value)
+            }
+          })
         }
 
         return value
       }
       default: {
+        // TODO: register observers (either single object or arrays)
         return value instanceof Type ? value : new Type(value)
       }
     }
