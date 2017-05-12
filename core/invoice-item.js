@@ -1,6 +1,6 @@
-const Entity = require('./entity')
+const PersistentEntity = require('./persistent-entity')
 
-class InvoiceItem extends Entity {
+class InvoiceItem extends PersistentEntity {
   static get properties () {
     return {
       'description': {
@@ -20,7 +20,7 @@ class InvoiceItem extends Entity {
   }
 
   toString () {
-    return `InvoiceItem: {id: ${this.id}, description: ${this.description}, ` +
+    return `InvoiceItem: { id: ${this.id}, description: ${this.description}, ` +
       `amount: ${this.amount} }`
   }
 }

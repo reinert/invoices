@@ -1,6 +1,6 @@
-const Entity = require('./entity')
+const PersistentEntity = require('./persistent-entity')
 
-class Invoice extends Entity {
+class Invoice extends PersistentEntity {
   static get properties () {
     return {
       'type': {

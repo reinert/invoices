@@ -1,6 +1,5 @@
 const datasource = require('./datasource')
 const EntityModelMap = require('./entity-model-map')
-const Holder = require('../core').Holder
 const { Repository } = require('../core')
 const Sequelize = require('sequelize')
 
@@ -37,11 +36,10 @@ class SequelizeRepository extends Repository {
 function proxyArray (Entity, arr) {
   return new Proxy(arr, {
     get (target, key, receiver) {
-      if (!isNaN(parseFloat(key)) && isFinite(key)) {
+      if (isNumeric(key)) {
         if (target[key] instanceof Sequelize.Instance) {
           target[key] = new Entity(target[key])
         }
-        return target[key]
       }
       return Reflect.get(target, key, receiver)
     }
@@ -53,10 +51,14 @@ function getModel (Entity) {
 }
 
 function ensureInstance (entity) {
-  if (entity._holder instanceof Holder) {
+  if (!(entity._holder instanceof Sequelize.Instance)) {
     entity._holder = getModel(entity.constructor).build(entity._holder._values)
   }
   return entity
+}
+
+function isNumeric (v) {
+  return !isNaN(parseFloat(v)) && isFinite(v)
 }
 
 module.exports = SequelizeRepository

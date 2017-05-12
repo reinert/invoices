@@ -7,13 +7,13 @@ const { SimpleInvoice } = require('../../core')
 const expect = chai.expect
 
 describe('Invoice', () => {
-  it('type descriptor has \'value\' and \'readOnly\' props after creation',
+  it('type metadata has \'value\' and \'readOnly\' props after creation',
     () => {
-      const si = new SimpleInvoice({ invoiceDate: new Date(), amount: 100.00 })
-      expect(si.constructor).to.have.deep.property(
-        '_descriptors.type.readOnly', true)
-      expect(si.constructor).to.have.deep.property(
-        '_descriptors.type.value', 'SIMPLE')
+      const di = new SimpleInvoice({ invoiceDate: new Date() })
+      expect(di.constructor).to.have.deep.property(
+        'metadata.properties.type.readOnly', true)
+      expect(di.constructor).to.have.deep.property(
+        'metadata.properties.type.value', 'SIMPLE')
     })
 
   it('type is \'SIMPLE\' after creation', () => {

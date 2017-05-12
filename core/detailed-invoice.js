@@ -8,8 +8,7 @@ class DetailedInvoice extends Invoice {
         value: 'DETAILED'
       },
       'items': {
-        type: Array,
-        subType: InvoiceItem,
+        type: Array.of(InvoiceItem),
         private: true
       }
     }
@@ -21,6 +20,7 @@ class DetailedInvoice extends Invoice {
       this._items = values.items
       // TODO: register an observer to auto-update this field
       for (let item of this._items) {
+        console.log('>>>>>>>', item.amount)
         this.amount += item.amount
       }
     }
@@ -28,7 +28,7 @@ class DetailedInvoice extends Invoice {
 
   addItem (item) {
     // TODO: auto-coerce by proxying the array
-    item = this._coerce(item, InvoiceItem)
+    item = this.constructor.coerce(item, InvoiceItem)
     this._items.push(item)
     // TODO: register an observer to auto-update this field
     this.amount += item.amount

@@ -1,9 +1,9 @@
 const bcrypt = require('bcrypt')
-const Entity = require('./entity')
+const PersistentEntity = require('./persistent-entity')
 
 const SALT_ROUNDS = 13
 
-class User extends Entity {
+class User extends PersistentEntity {
   static get properties () {
     return {
       'email': {
@@ -42,7 +42,7 @@ class User extends Entity {
   }
 
   toString () {
-    return `User: {id: ${this.id}, email: ${this.email} }`
+    return `User: { id: ${this.id}, email: ${this.email} }`
   }
 }
 

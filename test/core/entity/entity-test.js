@@ -1,6 +1,6 @@
 /* global describe it */
 const chai = require('chai')
-const Entity = require('../../core/entity')
+const Entity = require('../../../core/entity')
 const AssertionError = require('assert').AssertionError
 
 const expect = chai.expect
@@ -51,7 +51,7 @@ describe('Entity Static', () => {
         }
       }
     }
-    expect(new Test().constructor._descriptors.ab.readOnly).to.be.equal(true)
+    expect(new Test().constructor.metadata.properties.ab.readOnly).to.be.equal(true)
   })
 })
 
@@ -79,10 +79,14 @@ describe('Entity __coerce on construction', () => {
         'date': Date,
         'arr': Array,
         'custom': Custom,
-        'customArr': { type: Array, subType: Custom }
+        'customArr': { type: Array, genericType: Custom }
       }
     }
   }
+
+  it("Is necessary so the test below doesn't fail", () => {
+    expect(() => new Test()).not.to.throw()
+  })
 
   it('String literal', () => {
     const test = new Test({ str: 'literal' })
@@ -137,7 +141,7 @@ describe('Entity __coerce on construction', () => {
   it('Array invalid value', () => {
     const arr = '[1, 2, 3]'
     expect(() => new Test({ arr: arr })).to.throw(TypeError,
-      'must be an array')
+      'is not an array')
   })
 
   it('Custom type', () => {
@@ -212,7 +216,7 @@ describe('Entity __coerce after construction', () => {
         'date': Date,
         'arr': Array,
         'custom': Custom,
-        'customArr': { type: Array, subType: Custom }
+        'customArr': { type: Array, genericType: Custom }
       }
     }
   }
@@ -296,7 +300,7 @@ describe('Entity __coerce after construction', () => {
     const test = new Test()
 
     expect(() => { test.arr = arr }).to.throw(TypeError,
-      'must be an array')
+      'is not an array')
   })
 
   it('Custom type', () => {
@@ -358,11 +362,8 @@ describe('Entity __coerce after construction', () => {
   })
 })
 
-describe('Entity Constructor Function',
-  testEntityConstructorProps(Entity))
-
-describe('Entity Instance',
-  testEntityInstanceProps(Entity))
+// describe('Entity Instance',
+//   testEntityInstanceProps(Entity))
 
 class Thing extends Entity {
   static get properties () {
@@ -382,9 +383,6 @@ class Thing extends Entity {
     }
   }
 }
-
-describe('Entity Inheritance Constructor Function',
-  testEntityConstructorProps(Thing))
 
 describe('Entity Inheritance Instance',
   testEntityInstanceProps(Thing))
@@ -406,7 +404,7 @@ class Parent extends Entity {
       'rlyVl': { type: String, readOnly: true, value: 'test' },
       'a': { type: Number },
       'notifies': { type: String, notify: true },
-      'arr': { type: Array, subType: Thing }
+      'arr': { type: Array, genericType: Thing }
     }
   }
 }
@@ -428,9 +426,6 @@ class Child extends Parent {
   }
 }
 
-describe('Entity Inheritance Constructor Function',
-  testEntityConstructorProps(Child))
-
 describe('Entity Inheritance Instance',
   testEntityInstanceProps(Child))
 
@@ -443,30 +438,8 @@ describe('Entity Two Level Inheritance Public Methods',
 describe('Entity Two Level Inheritance Protected Methods',
   testProtectedMethods(Child))
 
-function testEntityConstructorProps (Clazz) {
-  return () => {
-    it("has '_descriptors' and '_propertyDescriptors'", () => {
-      expect(new Clazz().constructor).to.have.ownProperty('_descriptors')
-      expect(Clazz).to.have.ownProperty('_propertyDescriptors')
-    })
-
-    it("has '_descriptors' filled with 'id', 'createdAt' and 'updatedAt'", () => {
-      expect(new Clazz().constructor).to.have.deep.property('_descriptors.id')
-      expect(Clazz).to.have.deep.property('_descriptors.createdAt')
-      expect(Clazz).to.have.deep.property('_descriptors.updatedAt')
-    })
-  }
-}
-
 function testEntityInstanceProps (Clazz) {
   return () => {
-    it("has 'id', 'createdAt' and 'updatedAt'", () => {
-      let instance = new Clazz()
-      expect(instance).to.have.ownProperty('id')
-      expect(instance).to.have.ownProperty('createdAt')
-      expect(instance).to.have.ownProperty('updatedAt')
-    })
-
     it("has '_holder' not enumerable", () => {
       let instance = new Clazz()
       expect(instance).to.have.ownProperty('_holder')
@@ -475,10 +448,10 @@ function testEntityInstanceProps (Clazz) {
     })
 
     it("properties' values should not be mixed in multiple instances", () => {
-      let a = new Clazz({ id: 1 })
-      let b = new Clazz({ id: 2 })
-      expect(a).to.have.property('id', 1)
-      expect(b).to.have.property('id', 2)
+      let a = new Clazz({ normal: 'a1' })
+      let b = new Clazz({ normal: 'b2' })
+      expect(a).to.have.property('normal', 'a1')
+      expect(b).to.have.property('normal', 'b2')
     })
   }
 }
@@ -537,18 +510,19 @@ function testDescriptors (Clazz) {
       expect(instance._pvt).to.be.equal(123)
     })
 
-    it('computed properties work properly on Contruction', function () {
+    it('computed properties work properly on Construction', function () {
       let instance = new Clazz({ a: 1, b: 2 })
       expect(instance.ab).to.be.equal(3)
     })
 
-    it('computed properties work properly after Contruction', function () {
+    it('computed properties work properly after Construction', function () {
       let instance = new Clazz()
       expect(instance.ab).to.be.equal(undefined)
       instance.a = 1
       expect(Number.isNaN(instance.ab)).to.be.equal(false)
+      expect(instance.ab).to.be.equal(undefined)
       instance.b = 2
-      expect(instance.ab).to.be.equal(3)
+      expect(instance._get('ab')).to.be.equal(3)
     })
 
     it('notify fires a change event when property is changed', function (done) {

@@ -7,14 +7,24 @@ const { DetailedInvoice } = require('../../core')
 const expect = chai.expect
 
 describe('DetailedInvoice', () => {
-  it('type descriptor has \'value\' and \'readOnly\' props after creation',
+  it('type metadata has \'value\' and \'readOnly\' props after creation',
     () => {
       const di = new DetailedInvoice({ invoiceDate: new Date() })
       expect(di.constructor).to.have.deep.property(
-        '_descriptors.type.readOnly', true)
+        'metadata.properties.type.readOnly', true)
       expect(di.constructor).to.have.deep.property(
-        '_descriptors.type.value', 'DETAILED')
+        'metadata.properties.type.value', 'DETAILED')
     })
+
+  it("Is necessary so the test below doesn't fail", () => {
+    expect(() => new DetailedInvoice({
+      invoiceDate: new Date(),
+      items: [
+        { description: 'A', quantity: 1, unitPrice: 1.00 },
+        { description: 'B', quantity: 4, unitPrice: 2.50 }
+      ]
+    })).not.to.throw()
+  })
 
   it('items array is properly set after creation', () => {
     const di = new DetailedInvoice({
