@@ -1,74 +1,97 @@
-/* global describe it */
+/* global describe it beforeEach */
 const chai = require('chai')
 // const chaiAsPromised = require('chai-as-promised')
-const { DetailedInvoice } = require('../../core')
+const { DetailedInvoice, InvoiceItem } = require('../../core')
 
 // chai.use(chaiAsPromised)
 const expect = chai.expect
 
 describe('DetailedInvoice', () => {
-  it('type metadata has \'value\' and \'readOnly\' props after creation',
-    () => {
-      const di = new DetailedInvoice({ invoiceDate: new Date() })
-      expect(di.constructor).to.have.deep.property(
-        'metadata.properties.type.readOnly', true)
-      expect(di.constructor).to.have.deep.property(
-        'metadata.properties.type.value', 'DETAILED')
-    })
+  let invoice = null
+  let previousAmount = null
 
-  it("Is necessary so the test below doesn't fail", () => {
-    expect(() => new DetailedInvoice({
+  beforeEach(() => {
+    invoice = new DetailedInvoice({
+      id: 1,
       invoiceDate: new Date(),
       items: [
         { description: 'A', quantity: 1, unitPrice: 1.00 },
-        { description: 'B', quantity: 4, unitPrice: 2.50 }
+        { description: 'B', quantity: 2, unitPrice: 2.00 },
+        { description: 'C', quantity: 4, unitPrice: 2.50 }
       ]
-    })).not.to.throw()
+    })
+
+    previousAmount = 15.00
+  })
+
+  it("'s type metadata has 'value' and 'readOnly' props after creation", () => {
+    expect(invoice.constructor).to.have.deep.property(
+      'metadata.properties.type.readOnly', true)
+    expect(invoice.constructor).to.have.deep.property(
+      'metadata.properties.type.value', 'DETAILED')
   })
 
   it('items array is properly set after creation', () => {
-    const di = new DetailedInvoice({
-      invoiceDate: new Date(),
-      items: [
-        { description: 'A', quantity: 1, unitPrice: 1.00 },
-        { description: 'B', quantity: 4, unitPrice: 2.50 }
-      ]
-    })
+    expect(invoice).to.have.property('items')
+    expect(invoice).to.have.deep.property('items.length', 3)
+  })
 
-    expect(di).to.have.property('_items')
-    expect(di).to.have.deep.property('_items.length', 2)
-    expect(di).to.have.property('amount', 11.00)
+  it("'s amount is the sum of the items' amounts", () => {
+    expect(invoice).to.have.property('amount', previousAmount)
   })
 
   it('updates amount when a new item is added', () => {
-    const di = new DetailedInvoice({
-      invoiceDate: new Date(),
-      items: [
-        { description: 'A', quantity: 1, unitPrice: 1.00 },
-        { description: 'B', quantity: 4, unitPrice: 2.50 }
-      ]
-    })
+    invoice.items.push({ description: 'D', quantity: 2, unitPrice: 1.10 })
+    expect(invoice).to.have.property('amount', previousAmount + 2.20)
+    previousAmount = invoice.amount
 
-    di.addItem({ description: 'C', quantity: 2, unitPrice: 3.10 })
+    invoice.items.unshift({ description: 'E', quantity: 1, unitPrice: 0.80 })
+    expect(invoice).to.have.property('amount', previousAmount + 0.80)
+    previousAmount = invoice.amount
 
-    expect(di).to.have.property('amount', 17.20)
+    invoice.items.splice(2, 0,
+      { description: 'F', quantity: 1, unitPrice: 2.00 },
+      { description: 'G', quantity: 2, unitPrice: 2.50 }
+    )
+    expect(invoice).to.have.property('amount', previousAmount + 2 + 5)
   })
 
   it('updates amount when an item is removed', () => {
-    const di = new DetailedInvoice({
-      invoiceDate: new Date(),
-      items: [
-        { description: 'A', quantity: 1, unitPrice: 1.00 },
-        { description: 'B', quantity: 4, unitPrice: 2.50 }
-      ]
-    })
+    let rm = null
 
-    di.removeItem(1)
+    rm = invoice.items.splice(1, 1)[0]
+    expect(invoice).to.have.property('amount', previousAmount - rm.amount)
+    previousAmount = invoice.amount
 
-    expect(di).to.have.property('amount', 1.00)
+    rm = invoice.items.pop()
+    expect(invoice).to.have.property('amount', previousAmount - rm.amount)
+    previousAmount = invoice.amount
 
-    di.removeItem(di.getItem(0))
+    rm = invoice.items.shift()
+    expect(invoice).to.have.property('amount', previousAmount - rm.amount)
+  })
 
-    expect(di).to.have.property('amount', 0.00)
+  it("updates amount when an item has it's amount changed", () => {
+    invoice.items[0].quantity = 2
+    expect(invoice).to.have.property('amount', previousAmount + 1)
+    previousAmount = invoice.amount
+
+    invoice.items[1].unitPrice = 3.00
+    expect(invoice).to.have.property('amount', previousAmount + 2)
+    previousAmount = invoice.amount
+
+    invoice.items.push({ description: 'D', quantity: 1, unitPrice: 2.00 })
+    expect(invoice).to.have.property('amount', previousAmount + 2.00)
+    previousAmount = invoice.amount
+    invoice.items[3].quantity = 2
+    expect(invoice).to.have.property('amount', previousAmount + 2.00)
+    previousAmount = invoice.amount
+
+    invoice.items.push(
+      new InvoiceItem({ description: 'E', quantity: 1, unitPrice: 3.00 }))
+    expect(invoice).to.have.property('amount', previousAmount + 3.00)
+    previousAmount = invoice.amount
+    invoice.items[4].unitPrice = 5.00
+    expect(invoice).to.have.property('amount', previousAmount + 2.00)
   })
 })

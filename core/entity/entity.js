@@ -4,15 +4,14 @@ const EntityMetadata = require('./entity-metadata')
 const Holder = require('./holder')
 
 class Entity extends EventEmitter {
-  static coerce (value, type, genericType) {
-    return this.coercer.coerce(value, type, genericType)
+  static coerce (value, type, options) {
+    return this.coercer.coerce(value, type, options)
   }
 
-  constructor (values) {
+  constructor (values = {}, options = {}) {
     super()
-    this.__initHolder(values || {})
     processConstructor(this.constructor)
-    processInstance(this)
+    processInstance(this, values, options)
   }
 
   /**
@@ -86,41 +85,22 @@ class Entity extends EventEmitter {
     return false
   }
 
-  __set (property, value) {
-    const newValue = this.__coerce(property, value)
+  _bindObservers (itemObserver = {}) {
+    for (let p in itemObserver) {
+      if (this.__propertyExists(p)) this.on(`${p}Changed`, itemObserver[p])
+    }
+  }
+
+  __set (property, value, options = {}) {
+    const newValue = this.__coerce(property, value,
+      { skipNotification: options.isDefault })
     const oldValue = this._holder.get(property)
+    if (newValue === oldValue) return
     this._holder.set(property, newValue)
-    if (this.__mustNotify(property)) {
+    const skipNotification = options.skipNotification || options.isDefault
+    if (this.__mustNotify(property) && !skipNotification) {
       this.emit(`${property}Changed`, newValue, oldValue)
     }
-  }
-
-  __initHolder (values) {
-    const holder = isHolder(values)
-      ? values
-      : new Holder(this.__sanitize(values))
-
-    Object.defineProperty(this, '_holder', {
-      value: holder,
-      enumerable: false,
-      writable: true,
-      configurable: true
-    })
-  }
-
-  __sanitize (values) {
-    if (values) {
-      const sanitized = {}
-      for (let p in values) {
-        if (this.__propertyExists(p)) {
-          if (!(this.__isPrivate(p) || this.__isDefaultReadOnly(p))) {
-            sanitized[p] = this.__coerce(p, values[p])
-          }
-        }
-      }
-      values = sanitized
-    }
-    return values
   }
 
   __mustNotify (property) {
@@ -151,10 +131,15 @@ class Entity extends EventEmitter {
     return this.constructor.metadata.getProperties()
   }
 
-  __coerce (property, value) {
+  __coerce (property, value, options) {
     const type = this.constructor.metadata.getType(property)
     const genericType = this.constructor.metadata.getGenericType(property)
-    return this.constructor.coerce(value, type, genericType)
+    const itemObserver = this._observers.item[property]
+    const arrayObserver = this._observers.array[property]
+    const skipNotification = options.skipNotification
+    return this.constructor.coerce(value, type, {
+      genericType, itemObserver, arrayObserver, skipNotification
+    })
   }
 }
 
@@ -167,11 +152,6 @@ Object.defineProperty(Entity, 'coercer', {
   configurable: true
 })
 
-// Holder duck type check
-function isHolder (obj) {
-  return typeof obj.set === 'function' && typeof obj.get === 'function'
-}
-
 function processConstructor (entityCtor) {
   if (entityCtor.hasOwnProperty('metadata')) return
 
@@ -182,19 +162,66 @@ function processConstructor (entityCtor) {
   }
 
   Object.defineProperty(entityCtor, 'metadata', {
-    value: new EntityMetadata(entityCtor.properties, proto.metadata),
+    value: new EntityMetadata(entityCtor, proto.metadata),
     enumerable: false,
     configurable: false,
     writable: false
   })
 }
 
-function processInstance (entity) {
+function processInstance (entity, values, options) {
   const meta = entity.constructor.metadata
+  const isValuesHolder = isHolder(values)
+
+  Object.defineProperty(entity, '_holder', {
+    value: isValuesHolder ? values : new Holder(),
+    enumerable: false,
+    writable: true,
+    configurable: false
+  })
+
+  Object.defineProperty(entity, '_observers', {
+    value: {
+      item: {},
+      array: {}
+    },
+    enumerable: false,
+    writable: false,
+    configurable: false
+  })
 
   for (let p of meta.getProperties()) {
     // set property descriptor in this instance
     Object.defineProperty(entity, meta.getAccessor(p), meta.getDescriptor(p))
+
+    // set external observer
+    const itemObserver = options.itemObserver
+    if (itemObserver && itemObserver.hasOwnProperty(p)) {
+      entity.on(`${p}Changed`, itemObserver[p])
+    }
+
+    // set observer
+    if (meta.hasObserver(p)) {
+      entity.on(`${p}Changed`, entity[meta.getObserver(p)])
+    }
+
+    // set item observer
+    if (meta.hasItemObserver(p)) {
+      entity._observers.item[p] =
+        Object.entries(meta.getItemObserver(p)).reduce((prev, curr) => {
+          prev[curr[0]] = entity[curr[1]].bind(entity)
+          return prev
+        }, {})
+    }
+
+    // set array observer
+    if (meta.hasArrayObserver(p)) {
+      entity._observers.array[p] =
+        Object.entries(meta.getArrayObserver(p)).reduce((prev, curr) => {
+          prev[curr[0]] = entity[curr[1]].bind(entity)
+          return prev
+        }, {})
+    }
 
     // set computed properties
     if (meta.isComputed(p)) {
@@ -202,15 +229,27 @@ function processInstance (entity) {
       for (let dep of meta.getDependencies(p)) {
         entity.on(`${dep}Changed`, listener)
       }
+
       // set computed value on construction if dependencies are set
-      listener.call(entity)
+      listener.call(entity, { skipNotification: true })
     }
 
     // set default value if necessary
     if (meta.isDefault(p)) {
-      entity.__set(p, meta.getDefaultValue(p))
+      entity.__set(p, meta.getDefaultValue(p), { isDefault: true })
+    }
+
+    // set the values passed in constructor when appropriate
+    if (!isValuesHolder && values.hasOwnProperty(p) &&
+      !(entity.__isPrivate(p) || entity.__isDefaultReadOnly(p))) {
+      entity.__set(p, values[p], options)
     }
   }
+}
+
+// Holder duck type check
+function isHolder (obj) {
+  return typeof obj.set === 'function' && typeof obj.get === 'function'
 }
 
 module.exports = Entity

@@ -14,7 +14,8 @@ class InvoiceItem extends PersistentEntity {
       },
       'amount': {
         type: Number,
-        computed: (quantity, unitPrice) => quantity * unitPrice
+        computed: (quantity, unitPrice) => quantity * unitPrice,
+        notify: true
       }
     }
   }

@@ -1,7 +1,14 @@
 const assert = require('assert')
+const EventEmitter = require('events')
 
 class EntityMetadata {
-  constructor (properties, parentMetadata) {
+  constructor (entityCtor, parentMetadata) {
+    Object.defineProperty(this, 'entityCtor', {
+      value: entityCtor,
+      configurable: false,
+      writable: false
+    })
+
     // init properties with parent's if it exists
     const props = parentMetadata && parentMetadata instanceof EntityMetadata
       ? Object.assign({}, parentMetadata.properties)
@@ -13,11 +20,12 @@ class EntityMetadata {
       writable: false
     })
 
+    const properties = entityCtor.properties
     for (let p in properties) {
       processDescriptor(this, p, properties[p])
     }
 
-    Object.defineProperty(this, 'names', {
+    Object.defineProperty(this, 'propNames', {
       value: Object.keys(this.properties),
       configurable: false,
       writable: false
@@ -58,7 +66,9 @@ class EntityMetadata {
   }
 
   getDefaultValue (property) {
-    return this.properties[property].value
+    return typeof this.properties[property].value === 'function'
+      ? this.properties[property].value()
+      : this.properties[property].value
   }
 
   getDependencies (property) {
@@ -70,7 +80,7 @@ class EntityMetadata {
   }
 
   getProperties () {
-    return this.names
+    return this.propNames
   }
 
   hasProperty (property) {
@@ -85,19 +95,40 @@ class EntityMetadata {
     return this.properties[property].genericType
   }
 
-  // getListener (property) {
-  //   if (!this.properties[property].listener && this.isComputed(property)) {
-  //     this.properties[property].listener = this._createListener(property)
-  //   }
-  //
-  //   return this.properties[property].listener
-  // }
+  hasObserver (property) {
+    return this.properties[property].hasOwnProperty('observer')
+  }
+
+  getObserver (property) {
+    return this.properties[property].observer
+  }
+
+  hasArrayObserver (property) {
+    return this.properties[property].hasOwnProperty('arrayObserver')
+  }
+
+  getArrayObserver (property) {
+    return this.properties[property].arrayObserver
+  }
+
+  hasItemObserver (property, subProperty) {
+    return this.properties[property].hasOwnProperty('itemObserver') &&
+      (subProperty
+        ? this.properties[property].itemObserver.hasOwnProperty(subProperty)
+        : true)
+  }
+
+  getItemObserver (property, subProperty) {
+    return subProperty
+      ? this.properties[property].itemObserver[subProperty]
+      : this.properties[property].itemObserver
+  }
 
   createListener (property) {
     const computeValue = this.getComputedFunction(property)
     const dependencies = this.getDependencies(property)
 
-    return function () {
+    return function (options) {
       const depValues = []
 
       for (let dep of dependencies) {
@@ -110,7 +141,7 @@ class EntityMetadata {
       }
 
       // this references entity instance
-      this.__set(property, computeValue(...depValues))
+      this.__set(property, computeValue(...depValues), options || {})
     }
   }
 }
@@ -145,7 +176,7 @@ function processDescriptor (meta, propName, propMetadata) {
   }
 
   if (propMetadata.computed) {
-    assertComputedIsFunction(propName, propMetadata)
+    assertComputedIsFunctionOrString(meta.entityCtor, propName, propMetadata)
 
     const dependencies = getFunctionArgs(propMetadata.computed)
     for (let dependency of dependencies) {
@@ -162,6 +193,23 @@ function processDescriptor (meta, propName, propMetadata) {
 
   if (propMetadata.readOnly) {
     delete d.set
+  }
+
+  if (propMetadata.observer) {
+    propMetadata.notify = true
+  }
+
+  if (propMetadata.arrayObserver) {
+    assertTypeIsArray(propName, propMetadata, 'arrayObserver')
+    assertArrayObserverHasInsertAndDelete(propName, propMetadata)
+    assertArrayObserverFunctionIsInPrototype('insert', meta.entityCtor,
+      propName, propMetadata)
+    assertArrayObserverFunctionIsInPrototype('delete', meta.entityCtor,
+      propName, propMetadata)
+  }
+
+  if (propMetadata.itemObserver) {
+    assertTypeIsEventEmitterSuccessorOrArray(propName, propMetadata, 'itemObserver')
   }
 
   meta.properties[propName].descriptor = d
@@ -189,9 +237,14 @@ function getDefaultDescriptor (propName) {
 //   }
 // }
 
-function assertComputedIsFunction (propName, propMetadata) {
+function assertComputedIsFunctionOrString (entityCtor, propName, propMetadata) {
+  if (typeof propMetadata.computed === 'string') {
+    propMetadata.computed = entityCtor.prototype[propMetadata.computed]
+  }
+
   assert(typeof propMetadata.computed === 'function',
-    `${propName}'s "computed" must be a function`)
+    `${propName}'s "computed" must be a function or a string referencing a ` +
+    `method in the prototype`)
 }
 
 function assertDependencyExists (meta, propName, depName) {
@@ -199,6 +252,31 @@ function assertDependencyExists (meta, propName, depName) {
     `argument "${depName}" in ${propName}'s computed function could not be ` +
     `resolved. Please make sure the property "${depName}" is declared before ` +
     `"${propName}" in the Entity properties getter.`)
+}
+
+function assertTypeIsArray (propName, propMetadata, metaProp) {
+  assert(propMetadata.type === Array || propMetadata.type.prototype instanceof EventEmitter,
+    `Misplaced ${metaProp} at ${propName}. It must be declared in a property` +
+    ` of a type Array.`)
+}
+
+function assertTypeIsEventEmitterSuccessorOrArray (propName, propMetadata, metaProp) {
+  assert(propMetadata.type === Array || propMetadata.type.prototype instanceof EventEmitter,
+    `Misplaced ${metaProp} at ${propName}. It must be declared in a property` +
+    ` of a type inheriting from EventEmitter or Array.`)
+}
+
+function assertArrayObserverHasInsertAndDelete (propName, propMetadata) {
+  assert(propMetadata.arrayObserver.hasOwnProperty('insert') &&
+    propMetadata.arrayObserver.hasOwnProperty('delete'),
+    `${propName}'s arrayObserver must have 'insert' and 'delete' observers.`)
+}
+
+function assertArrayObserverFunctionIsInPrototype (funcRef, entityCtor, propName,
+  propMetadata) {
+  assert(typeof entityCtor.prototype[propMetadata.arrayObserver[funcRef]] === 'function',
+    `${propMetadata.arrayObserver[funcRef]} ${funcRef} function not found` +
+    ` in ${entityCtor.name} prototype.`)
 }
 
 function ensureUnderscore (str) {

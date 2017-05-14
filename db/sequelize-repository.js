@@ -52,7 +52,7 @@ function getModel (Entity) {
 
 function ensureInstance (entity) {
   if (!(entity._holder instanceof Sequelize.Instance)) {
-    entity._holder = getModel(entity.constructor).build(entity._holder._values)
+    entity._holder = getModel(entity.constructor).build(entity._holder)
   }
   return entity
 }

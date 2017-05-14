@@ -1,14 +1,14 @@
 class Holder {
-  constructor (values) {
-    this._values = values
+  constructor (values = {}) {
+    Object.assign(this, values)
   }
 
   get (property) {
-    return this._values[property]
+    return this[property]
   }
 
   set (property, value) {
-    this._values[property] = value
+    this[property] = value
   }
 }
 

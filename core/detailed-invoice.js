@@ -9,46 +9,27 @@ class DetailedInvoice extends Invoice {
       },
       'items': {
         type: Array.of(InvoiceItem),
-        private: true
+        itemObserver: {
+          amount: '_onItemAmountChange'
+        },
+        arrayObserver: {
+          insert: '_onItemInsert',
+          delete: '_onItemDelete'
+        }
       }
     }
   }
 
-  constructor (values) {
-    super(values)
-    if (values.items) {
-      this._items = values.items
-      // TODO: register an observer to auto-update this field
-      for (let item of this._items) {
-        console.log('>>>>>>>', item.amount)
-        this.amount += item.amount
-      }
-    }
-  }
-
-  addItem (item) {
-    // TODO: auto-coerce by proxying the array
-    item = this.constructor.coerce(item, InvoiceItem)
-    this._items.push(item)
-    // TODO: register an observer to auto-update this field
+  _onItemInsert (item) {
     this.amount += item.amount
   }
 
-  removeItem (idx) {
-    if (idx instanceof InvoiceItem) {
-      idx = this._items.indexOf(idx)
-    }
-    let removed = this._items.splice(idx, 1)
-    // TODO: register an observer to auto-update this field
-    if (removed.length > 0) this.amount -= removed[0].amount
+  _onItemDelete (item) {
+    this.amount -= item.amount
   }
 
-  getItemsSize () {
-    return this._items.length
-  }
-
-  getItem (idx) {
-    return this._items[idx]
+  _onItemAmountChange (amount, old) {
+    this.amount = this.amount + amount - old
   }
 }
 

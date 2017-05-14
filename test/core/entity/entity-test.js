@@ -6,19 +6,57 @@ const AssertionError = require('assert').AssertionError
 const expect = chai.expect
 
 describe('Entity Static', () => {
-  it('computed must be a function', () => {
+  it('computed must be a function or string referencing method in prototype',
+    () => {
+      class Test extends Entity {
+        static get properties () {
+          return {
+            'malformedComputed': {
+              type: String,
+              computed: 'bad'
+            }
+          }
+        }
+      }
+      expect(() => new Test()).to.throw(AssertionError,
+        '"computed" must be a function or a string referencing a method in ' +
+        'the prototype')
+    })
+
+  it('computed can be a string referencing a method in the prototype', () => {
     class Test extends Entity {
       static get properties () {
         return {
-          'malformedComputed': {
-            type: String,
-            computed: 'bad'
+          'a': { type: Number },
+          'b': { type: Number },
+          'stringComputed': {
+            type: Number,
+            computed: 'sum'
+          }
+        }
+      }
+
+      sum (a, b) {
+        return a + b
+      }
+    }
+    expect(() => new Test()).to.not.throw()
+  })
+
+  it('computed can be function', () => {
+    class Test extends Entity {
+      static get properties () {
+        return {
+          'a': { type: Number },
+          'b': { type: Number },
+          funcComputed: {
+            type: Number,
+            computed: (a, b) => a + b
           }
         }
       }
     }
-    expect(() => new Test()).to.throw(AssertionError,
-      '"computed" must be a function')
+    expect(() => new Test()).to.not.throw()
   })
 
   it('computed properties must be declared after dependent properties', () => {

@@ -3,7 +3,7 @@ class Coercer {
     this.strict = strict
   }
 
-  coerce (value, Type, GenericType) {
+  coerce (value, Type, options = {}) {
     if (value == null) return value
 
     switch (Type) {
@@ -11,35 +11,135 @@ class Coercer {
       case Number: return this.toNumber(value)
       case Boolean: return this.toBoolean(value)
       case Date: return this.toDate(value)
-      case Array: return this.toArray(value, GenericType)
-      default: return this.toType(Type, value)
+      case Array: return this.toArray(value, options)
+      default: return this.toType(Type, value, options)
     }
   }
 
-  toArray (value, GenericType) {
+  toArray (value, options) {
     if (!Array.isArray(value)) throw new TypeError(`${value} is not an array`)
+
+    const GenericType = options.genericType
+    const itemObserver = options.itemObserver
+    const arrayObserver = options.arrayObserver
+    const skipInsert = options.skipNotification
 
     if (GenericType != null) {
       // ensure all items in the array are coerced
-      if (value.length > 0 && !(value[0] instanceof GenericType)) {
-        for (let i = 0; i < value.length; ++i) {
-          value[i] = this.coerce(value[i], GenericType)
+      for (let i = 0; i < value.length; ++i) {
+        // coerce and register deep observers
+        value[i] = this.coerce(value[i], GenericType, {
+          itemObserver: itemObserver,
+          skipNotification: skipInsert
+        })
+
+        // trigger insert observer if necessary on construction
+        if (skipInsert !== true && arrayObserver) {
+          arrayObserver.insert(value[i])
         }
       }
 
       // proxy the array to ensure the items in the array will be coerced
       const self = this
-      value = new Proxy(value, {
-        set (target, key, value) {
-          if (typeof key === 'number' || isNumeric(key)) {
-            if (!(value instanceof GenericType)) {
-              value = self.coerce(value, GenericType)
-            }
-          }
 
-          return Reflect.set(target, key, value)
+      if (arrayObserver) {
+        value = new Proxy(value, {
+          deleteProperty (target, property) {
+            if (typeof property === 'number' || isNumeric(property)) {
+              const deleted = target[property]
+
+              const result = Reflect.set(target, property, value)
+
+              // trigger delete observer
+              arrayObserver.delete(deleted)
+
+              return result
+            }
+
+            return Reflect.set(target, property, value)
+          },
+
+          set (target, property, value) {
+            if (typeof property === 'number' || isNumeric(property)) {
+              // coerce value and register observers
+              value = self.coerce(value, GenericType, { itemObserver })
+
+              const deleted = target[property]
+
+              const result = Reflect.set(target, property, value)
+
+              // trigger delete observer if there's an item in the position
+              if (deleted !== undefined) {
+                arrayObserver.delete(deleted)
+              }
+
+              // trigger insert observer
+              arrayObserver.insert(value)
+
+              return result
+            }
+
+            return Reflect.set(target, property, value)
+          }
+        })
+      } else {
+        value = new Proxy(value, {
+          set (target, key, value) {
+            if (typeof key === 'number' || isNumeric(key)) {
+              // coerce value and register observers
+              value = self.coerce(value, GenericType, { itemObserver })
+            }
+
+            return Reflect.set(target, key, value)
+          }
+        })
+      }
+    } else {
+      if (arrayObserver) {
+        // trigger insert observer if necessary on construction
+        if (skipInsert !== true) {
+          for (let i = 0; i < value.length; ++i) {
+            arrayObserver.insert(value[i])
+          }
         }
-      })
+
+        value = new Proxy(value, {
+          deleteProperty (target, property) {
+            if (typeof property === 'number' || isNumeric(property)) {
+              const deleted = target[property]
+
+              const result = Reflect.set(target, property, value)
+
+              // trigger delete observer
+              arrayObserver.delete(deleted)
+
+              return result
+            }
+
+            return Reflect.set(target, property, value)
+          },
+
+          set (target, property, value) {
+            if (typeof property === 'number' || isNumeric(property)) {
+              const deleted = target[property]
+
+              const result = Reflect.set(target, property, value)
+
+              // trigger delete observer if there's an item in the position
+              if (deleted !== undefined) {
+                arrayObserver.delete(deleted)
+              }
+
+              // trigger insert observer
+              arrayObserver.insert(value)
+
+              return result
+            }
+
+            return Reflect.set(target, property, value)
+          }
+        })
+      }
     }
 
     return value
@@ -81,11 +181,12 @@ class Coercer {
     return value
   }
 
-  toType (Type, value) {
-    // TODO: register observers (either single object or arrays)
-    if (!(value instanceof Type)) {
+  toType (Type, value, options) {
+    if (value instanceof Type) {
+      if (options.itemObserver) value._bindObservers(options.itemObserver)
+    } else {
       if (this.strict) throw new TypeError(`"${value}" is not a ${Type.name}`)
-      value = new Type(value)
+      value = new Type(value, options)
     }
 
     return value
