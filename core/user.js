@@ -1,9 +1,31 @@
 const bcrypt = require('bcrypt')
-const Entity = require('./entity')
+const PersistentEntity = require('./persistent-entity')
 
 const SALT_ROUNDS = 13
 
-class User extends Entity {
+class User extends PersistentEntity {
+  static get properties () {
+    return {
+      'email': {
+        type: String
+      },
+      'password': {
+        type: String,
+        private: true
+      },
+      'isEncrypted': {
+        type: Boolean,
+        private: true
+      },
+      'firstName': {
+        type: String
+      },
+      'lastName': {
+        type: String
+      }
+    }
+  }
+
   setPassword (plainPassword) {
     return bcrypt.hash(plainPassword, SALT_ROUNDS)
         .then((hash) => {
@@ -20,16 +42,8 @@ class User extends Entity {
   }
 
   toString () {
-    return `User: {id: ${this.id}, email: ${this.email} }`
+    return `User: { id: ${this.id}, email: ${this.email} }`
   }
 }
-
-User.$({
-  'email': {},
-  'password': { private: true },
-  'isEncrypted': { private: true },
-  'firstName': {},
-  'lastName': {}
-})
 
 module.exports = User
