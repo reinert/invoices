@@ -1,14 +1,13 @@
-const config = require('../config/datasource')
 const Sequelize = require('sequelize')
+const config = require('../config/datasource')
+const readOnlyPlugin = require('./plugins/readonly-plugin')
 
 const env = process.env.NODE_ENV || 'development'
-const conn = config[env]
+const con = config[env]
 
-const datasource = new Sequelize(conn.database, conn.username, conn.password, {
-  dialect: conn.dialect,
-  host: conn.host,
-  port: conn.port,
-  pool: conn.pool
-})
+const datasource = new Sequelize(con.database, con.username, con.password, con)
+
+readOnlyPlugin(datasource)
+readOnlyPlugin(datasource)
 
 module.exports = datasource

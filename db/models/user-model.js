@@ -1,4 +1,4 @@
-const datasource = require('./datasource')
+const datasource = require('../datasource')
 const Sequelize = require('sequelize')
 
 const UserModel = datasource.define('user', {

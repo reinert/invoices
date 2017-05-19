@@ -173,6 +173,12 @@ function processInstance (entity, values, options) {
   const meta = entity.constructor.metadata
   const isValuesHolder = isHolder(values)
 
+  Object.defineProperties(entity, {
+    'domain': { enumerable: false },
+    '_events': { enumerable: false },
+    '_eventsCount': { enumerable: false }
+  })
+
   Object.defineProperty(entity, '_holder', {
     value: isValuesHolder ? values : new Holder(),
     enumerable: false,

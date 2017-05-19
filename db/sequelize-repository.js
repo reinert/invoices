@@ -1,7 +1,9 @@
+const fs = require('fs')
+const Sequelize = require('sequelize')
+
 const datasource = require('./datasource')
 const EntityModelMap = require('./entity-model-map')
 const { Repository } = require('../core')
-const Sequelize = require('sequelize')
 
 class SequelizeRepository extends Repository {
   // @override
@@ -30,7 +32,15 @@ class SequelizeRepository extends Repository {
   // @override
   static sync (options) {
     return datasource.sync(options)
+      .then(() => exec('./db/migrations/invoice-item/set-id-on-insert-trigger.sql'))
+      .then(() => exec('./db/migrations/invoice-item/add-amount-to-invoice-on-upsert-trigger.sql'))
+      .then(() => exec('./db/migrations/invoice-item/subtract-amount-from-invoice-on-delete-trigger.sql'))
   }
+}
+
+function exec (file) {
+  return datasource.query(fs.readFileSync(file, { encoding: 'utf-8' }),
+    { raw: true })
 }
 
 function proxyArray (Entity, arr) {

@@ -1,23 +1,38 @@
 {
   "development": {
-    "dialect": "sqlite",
-    "username": null,
-    "password": null,
+    "dialect": "postgres",
+    "username": "invoices",
+    "password": "invoices",
     "host": "localhost",
-    "database": "app-dev"
+    "database": "invoices_dev",
+    "port": 5433,
+    "define": {
+      "underscored": true,
+      "underscoredAll": true
+    }
   },
   "test": {
-    "dialect": "sqlite",
-    "username": null,
-    "password": null,
+    "dialect": "postgres",
+    "username": "invoices",
+    "password": "invoices",
     "host": "localhost",
-    "database": "app-test"
+    "database": "invoices_test",
+    "port": 5433,
+    "define": {
+      "underscored": true,
+      "underscoredAll": true
+    }
   },
   "production": {
-    "dialect": "sqlite",
-    "username": null,
-    "password": null,
+    "dialect": "postgres",
+    "username": "invoices",
+    "password": "invoices",
     "host": "localhost",
-    "database": "app"
+    "database": "invoices",
+    "port": 5433,
+    "define": {
+      "underscored": true,
+      "underscoredAll": true
+    }
   }
 }

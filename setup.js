@@ -11,10 +11,12 @@ function setup () {
     case 'development':
       return Repository.sync({force: true})
         .then(() => {
-          const user = new User({username: 'john', email: 'john@bar.com'})
+          const user = new User(
+            { firstName: 'john', lastName: 'bar', email: 'john@bar.com' })
           return user.setPassword('123456')
         })
         .then((user) => Repository.save(user))
+        .then((user) => console.log(JSON.stringify(user)))
         .then(() => console.log('Development setup done!'))
         .catch((err) => {
           console.log('Error while syncing DB...')
