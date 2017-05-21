@@ -1,8 +1,12 @@
 const PersistentEntity = require('./persistent-entity')
+const User = require('./user')
 
 class Invoice extends PersistentEntity {
   static get properties () {
     return {
+      'user': {
+        type: User
+      },
       'type': {
         type: String,
         readOnly: true

@@ -3,13 +3,13 @@ CREATE OR REPLACE FUNCTION add_amount_to_invoice_on_upsert() RETURNS trigger AS 
         new_amount numeric(10,2);
         old_amount numeric(10,2);
     BEGIN
-        new_amount := (NEW.unit_price * NEW.quantity)::numeric(10,2) + COALESCE(NEW.frete, 0)::numeric(10,2) - COALESCE(NEW.valor_desconto, 0);
+        new_amount := (NEW.unit_price * NEW.quantity)::numeric(10,2);
         IF TG_OP = 'INSERT' THEN
-            UPDATE invoices SET amount = amount + new_amount WHERE id = NEW.id_invoice;
+            UPDATE invoices SET amount = (coalesce(amount, 0) + new_amount) WHERE id = NEW.invoice_id;
         ELSE
-            old_amount := (OLD.unit_price * OLD.quantity)::numeric(10,2) + COALESCE(OLD.frete, 0)::numeric(10,2) - COALESCE(OLD.valor_desconto, 0);
+            old_amount := (OLD.unit_price * OLD.quantity)::numeric(10,2);
             IF old_amount != new_amount THEN
-                UPDATE invoices SET amount = amount - old_amount + new_amount WHERE id = NEW.id_invoice;
+                UPDATE invoices SET amount = (coalesce(amount, 0) - old_amount + new_amount) WHERE id = NEW.invoice_id;
             END IF;
         END IF;
 

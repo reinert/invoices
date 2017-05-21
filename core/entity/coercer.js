@@ -194,7 +194,7 @@ class Coercer {
 }
 
 function isNumeric (value) {
-  return !isNaN(parseFloat(value)) && isFinite(value)
+  return typeof v !== 'symbol' && !isNaN(parseFloat(value)) && isFinite(value)
 }
 
 module.exports = Coercer

@@ -1,3 +1,5 @@
+ALTER TABLE invoices ALTER COLUMN amount SET DEFAULT 0;
+
 CREATE OR REPLACE FUNCTION set_id_on_insert() RETURNS trigger AS $set_id_on_insert$
     BEGIN
         IF NEW.id IS NULL THEN

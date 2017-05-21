@@ -2,96 +2,114 @@
 const chai = require('chai')
 // const chaiAsPromised = require('chai-as-promised')
 const { DetailedInvoice, InvoiceItem } = require('../../core')
+const Holder = require('../../core/entity/holder')
 
 // chai.use(chaiAsPromised)
 const expect = chai.expect
 
-describe('DetailedInvoice', () => {
-  let invoice = null
-  let previousAmount = null
+const createTests = (beforeEachFunc) => function () {
+  this.invoice = null
+  this.preViousamount = null
 
-  beforeEach(() => {
-    invoice = new DetailedInvoice({
-      id: 1,
-      invoiceDate: new Date(),
-      items: [
-        { description: 'A', quantity: 1, unitPrice: 1.00 },
-        { description: 'B', quantity: 2, unitPrice: 2.00 },
-        { description: 'C', quantity: 4, unitPrice: 2.50 }
-      ]
-    })
+  beforeEach(beforeEachFunc)
 
-    previousAmount = 15.00
-  })
-
-  it("'s type metadata has 'value' and 'readOnly' props after creation", () => {
-    expect(invoice.constructor).to.have.deep.property(
+  it("'s type metadata has 'value' and 'readOnly' props after creation", function () {
+    expect(this.invoice.constructor).to.have.deep.property(
       'metadata.properties.type.readOnly', true)
-    expect(invoice.constructor).to.have.deep.property(
+    expect(this.invoice.constructor).to.have.deep.property(
       'metadata.properties.type.value', 'DETAILED')
   })
 
-  it('items array is properly set after creation', () => {
-    expect(invoice).to.have.property('items')
-    expect(invoice).to.have.deep.property('items.length', 3)
+  it('items array is properly set after creation', function () {
+    expect(this.invoice).to.have.property('items')
+    expect(this.invoice).to.have.deep.property('items.length', 3)
   })
 
-  it("'s amount is the sum of the items' amounts", () => {
-    expect(invoice).to.have.property('amount', previousAmount)
+  it("'s amount is the sum of the items' amounts", function () {
+    expect(this.invoice).to.have.property('amount', this.preViousamount)
   })
 
-  it('updates amount when a new item is added', () => {
-    invoice.items.push({ description: 'D', quantity: 2, unitPrice: 1.10 })
-    expect(invoice).to.have.property('amount', previousAmount + 2.20)
-    previousAmount = invoice.amount
+  it('updates amount when a new item is added', function () {
+    this.invoice.items.push({ description: 'D', quantity: 2, unitPrice: 1.10 })
+    expect(this.invoice).to.have.property('amount', this.preViousamount + 2.20)
+    this.preViousamount = this.invoice.amount
 
-    invoice.items.unshift({ description: 'E', quantity: 1, unitPrice: 0.80 })
-    expect(invoice).to.have.property('amount', previousAmount + 0.80)
-    previousAmount = invoice.amount
+    this.invoice.items.unshift({ description: 'E', quantity: 1, unitPrice: 0.80 })
+    expect(this.invoice).to.have.property('amount', this.preViousamount + 0.80)
+    this.preViousamount = this.invoice.amount
 
-    invoice.items.splice(2, 0,
+    this.invoice.items.splice(2, 0,
       { description: 'F', quantity: 1, unitPrice: 2.00 },
       { description: 'G', quantity: 2, unitPrice: 2.50 }
     )
-    expect(invoice).to.have.property('amount', previousAmount + 2 + 5)
+    expect(this.invoice).to.have.property('amount', this.preViousamount + 2 + 5)
   })
 
-  it('updates amount when an item is removed', () => {
+  it('updates amount when an item is removed', function () {
     let rm = null
 
-    rm = invoice.items.splice(1, 1)[0]
-    expect(invoice).to.have.property('amount', previousAmount - rm.amount)
-    previousAmount = invoice.amount
+    rm = this.invoice.items.splice(1, 1)[0]
+    expect(this.invoice).to.have.property('amount', this.preViousamount - rm.amount)
+    this.preViousamount = this.invoice.amount
 
-    rm = invoice.items.pop()
-    expect(invoice).to.have.property('amount', previousAmount - rm.amount)
-    previousAmount = invoice.amount
+    rm = this.invoice.items.pop()
+    expect(this.invoice).to.have.property('amount', this.preViousamount - rm.amount)
+    this.preViousamount = this.invoice.amount
 
-    rm = invoice.items.shift()
-    expect(invoice).to.have.property('amount', previousAmount - rm.amount)
+    rm = this.invoice.items.shift()
+    expect(this.invoice).to.have.property('amount', this.preViousamount - rm.amount)
   })
 
-  it("updates amount when an item has it's amount changed", () => {
-    invoice.items[0].quantity = 2
-    expect(invoice).to.have.property('amount', previousAmount + 1)
-    previousAmount = invoice.amount
+  it("updates amount when an item has it's amount changed", function () {
+    this.invoice.items[0].quantity = 2
+    expect(this.invoice).to.have.property('amount', this.preViousamount + 1)
+    this.preViousamount = this.invoice.amount
 
-    invoice.items[1].unitPrice = 3.00
-    expect(invoice).to.have.property('amount', previousAmount + 2)
-    previousAmount = invoice.amount
+    this.invoice.items[1].unitPrice = 3.00
+    expect(this.invoice).to.have.property('amount', this.preViousamount + 2)
+    this.preViousamount = this.invoice.amount
 
-    invoice.items.push({ description: 'D', quantity: 1, unitPrice: 2.00 })
-    expect(invoice).to.have.property('amount', previousAmount + 2.00)
-    previousAmount = invoice.amount
-    invoice.items[3].quantity = 2
-    expect(invoice).to.have.property('amount', previousAmount + 2.00)
-    previousAmount = invoice.amount
+    this.invoice.items.push({ description: 'D', quantity: 1, unitPrice: 2.00 })
+    expect(this.invoice).to.have.property('amount', this.preViousamount + 2.00)
+    this.preViousamount = this.invoice.amount
+    this.invoice.items[3].quantity = 2
+    expect(this.invoice).to.have.property('amount', this.preViousamount + 2.00)
+    this.preViousamount = this.invoice.amount
 
-    invoice.items.push(
+    this.invoice.items.push(
       new InvoiceItem({ description: 'E', quantity: 1, unitPrice: 3.00 }))
-    expect(invoice).to.have.property('amount', previousAmount + 3.00)
-    previousAmount = invoice.amount
-    invoice.items[4].unitPrice = 5.00
-    expect(invoice).to.have.property('amount', previousAmount + 2.00)
+    expect(this.invoice).to.have.property('amount', this.preViousamount + 3.00)
+    this.preViousamount = this.invoice.amount
+    this.invoice.items[4].unitPrice = 5.00
+    expect(this.invoice).to.have.property('amount', this.preViousamount + 2.00)
   })
-})
+}
+
+describe('DetailedInvoice', createTests(function () {
+  this.invoice = new DetailedInvoice({
+    id: 1,
+    invoiceDate: new Date(),
+    items: [
+      { description: 'A', quantity: 1, unitPrice: 1.00 },
+      new InvoiceItem({ description: 'B', quantity: 2, unitPrice: 2.00 }),
+      new InvoiceItem(new Holder({ description: 'C', quantity: 4, unitPrice: 2.50 }))
+    ]
+  })
+
+  this.preViousamount = 15.00
+}))
+
+describe('DetailedInvoice with Holder', createTests(function () {
+  this.invoice = new DetailedInvoice(new Holder({
+    id: 1,
+    amount: 15.00,
+    invoiceDate: new Date(),
+    items: [
+      { description: 'A', quantity: 1, unitPrice: 1.00 },
+      new InvoiceItem({ description: 'B', quantity: 2, unitPrice: 2.00, amount: 4 }),
+      new InvoiceItem(new Holder({ description: 'C', quantity: 4, unitPrice: 2.50, amount: 10 }))
+    ]
+  }))
+
+  this.preViousamount = 15.00
+}))

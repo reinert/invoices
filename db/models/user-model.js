@@ -39,7 +39,8 @@ const UserModel = datasource.define('user', {
   },
   lastName: {
     type: Sequelize.STRING,
-    allowNull: false
+    // allowNull: false
+    readOnly: true
   }
 })
 

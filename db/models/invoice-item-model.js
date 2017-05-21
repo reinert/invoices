@@ -13,7 +13,8 @@ const InvoiceItemModel = datasource.define('invoiceItem', {
   },
   id: {
     type: Sequelize.INTEGER,
-    primaryKey: true
+    primaryKey: true,
+    set: function () {}
   },
   quantity: {
     type: Sequelize.DECIMAL(10, 2),
@@ -26,6 +27,9 @@ const InvoiceItemModel = datasource.define('invoiceItem', {
   },
   description: {
     type: Sequelize.STRING
+  },
+  amount: {
+    type: Sequelize.VIRTUAL
   }
 })
 

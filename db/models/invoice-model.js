@@ -11,7 +11,7 @@ const InvoiceModel = datasource.define('invoice', {
   amount: {
     type: Sequelize.DECIMAL(10, 2),
     allowNull: false,
-    defaultValue: 0.00
+    defaultValue: 0
   },
   invoiceDate: {
     field: 'invoice_date',
@@ -32,9 +32,42 @@ const InvoiceModel = datasource.define('invoice', {
   },
   description: {
     type: Sequelize.STRING
+  },
+  userId: {
+    field: 'user_id',
+    type: Sequelize.INTEGER,
+    allowNull: false,
+    onDelete: 'CASCADE',
+    references: {
+      model: UserModel,
+      key: 'id'
+    }
+  },
+  user: {
+    type: Sequelize.VIRTUAL,
+    set: function (user) {
+      this.setDataValue('userId', user.id)
+      this.setDataValue('user', user)
+    }
   }
 })
 
-InvoiceModel.belongsTo(UserModel)
+InvoiceModel.addHook('beforeCreate', excludeAmount)
+InvoiceModel.addHook('beforeUpdate', excludeAmount)
+InvoiceModel.addHook('afterCreate', restoreAmount)
+InvoiceModel.addHook('afterUpdate', restoreAmount)
+
+function excludeAmount (instance, options) {
+  if (instance.type === 'DETAILED') {
+    options.fields.splice(options.fields.indexOf('amount'), 1)
+    instance._previousAmount = instance.amount
+  }
+}
+
+function restoreAmount (instance, options) {
+  if (instance.type === 'DETAILED') {
+    instance.amount = instance._previousAmount
+  }
+}
 
 module.exports = InvoiceModel

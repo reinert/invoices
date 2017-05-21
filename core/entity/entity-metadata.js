@@ -91,8 +91,23 @@ class EntityMetadata {
     return this.properties[property].type
   }
 
+  isTypeEntity (property) {
+    return this.properties[property].type.prototype instanceof EventEmitter
+  }
+
   getGenericType (property) {
     return this.properties[property].genericType
+  }
+
+  isArrayTypeWithGenericEntity (property) {
+    if (this.properties[property].type !== Array ||
+      this.properties[property].genericType == null) return false
+    return this.properties[property].genericType.prototype instanceof EventEmitter
+  }
+
+  isGenericTypeEntity (property) {
+    if (!this.properties[property].genericType) return false
+    return this.properties[property].genericType.prototype instanceof EventEmitter
   }
 
   hasObserver (property) {
@@ -185,7 +200,7 @@ function processDescriptor (meta, propName, propMetadata) {
     }
     meta.properties[propName].dependencies = dependencies
 
-    // d.get = getComputedGetter()
+    d.get = getComputedGetter(propName, dependencies, propMetadata.computed)
 
     // readOnly by default when computed
     propMetadata.readOnly = true
@@ -224,18 +239,31 @@ function getDefaultDescriptor (propName) {
   }
 }
 
-// function getComputedGetter () {
-//   // a computed getter ensures it has been initialized
-//   return () => {
-//     const value = this._holder.get(property)
-//     if (value !== undefined) return value
-//
-//     // compute value if property has not been initialized yet
-//     this._changeListeners[property]()
-//
-//     return this._holder.get(property)
-//   }
-// }
+function getComputedGetter (property, dependencies, computeValue) {
+  // a computed getter ensures it has been initialized
+  return function () {
+    const value = this._holder.get(property)
+
+    if (value !== undefined) return value
+
+    // compute value if property has not been initialized yet
+    const depValues = []
+
+    for (let dep of dependencies) {
+      const depValue = this._get(dep)
+
+      // computed function is only called if all dependencies are set
+      if (depValue === undefined) return
+
+      depValues.push(depValue)
+    }
+
+    // this references entity instance
+    this.__set(property, computeValue(...depValues))
+
+    return this._holder.get(property)
+  }
+}
 
 function assertComputedIsFunctionOrString (entityCtor, propName, propMetadata) {
   if (typeof propMetadata.computed === 'string') {

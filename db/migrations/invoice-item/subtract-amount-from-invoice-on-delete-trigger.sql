@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION subtract_amount_from_invoice_on_delete() RETURNS trigger AS $subtract_amount_from_invoice_on_delete$
     BEGIN
-        UPDATE invoices SET amount = amount - ((OLD.unit_price * OLD.quantity)::numeric(10,2) + COALESCE(OLD.frete, 0)::numeric(10,2) - COALESCE(OLD.valor_desconto, 0)) WHERE id = OLD.id_invoice;
+        UPDATE invoices SET amount = (coalesce(amount, 0) - (OLD.unit_price * OLD.quantity)::numeric(10,2)) WHERE id = OLD.invoice_id;
 
         RETURN OLD;
     END;

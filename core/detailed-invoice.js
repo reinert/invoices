@@ -29,6 +29,7 @@ class DetailedInvoice extends Invoice {
   }
 
   _onItemAmountChange (amount, old) {
+    if (old === undefined) old = 0
     this.amount = this.amount + amount - old
   }
 }
