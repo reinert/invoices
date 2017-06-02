@@ -2,7 +2,9 @@ const HttpStatus = require('http-status')
 const { Repository } = require('../../db')
 const ApiError = require('../errors/api-error')
 
-module.exports = (Entity) => class ResourceHandler {
+module.exports = (Entity, idProp) => class ResourceHandler {
+  static get ID_PARAM () { return idProp }
+
   static retrieveOptions (req, res, next) {
     if (req.query.options) {
       try {
@@ -21,7 +23,7 @@ module.exports = (Entity) => class ResourceHandler {
 
   // after #retrieveOptions
   static retrieveEntity (req, res, next, id) {
-    req.options.id = id
+    req.options.pk = Object.assign(req.options.pk || {}, { [idProp]: id })
     Repository.find(Entity, req.options)
       .then(entity => {
         if (entity) {
@@ -47,7 +49,7 @@ module.exports = (Entity) => class ResourceHandler {
     Repository.save(entity, req.options)
       .then(entity =>
         res.status(HttpStatus.CREATED)
-          .location(`${req.baseUrl}/${entity.id}`)
+          .location(`${req.baseUrl}/${entity[idProp]}`)
           .json(entity))
       .catch(next)
   }

@@ -8,7 +8,7 @@ const B64_REGEX = new RegExp(
   '^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$'
 )
 
-class UserHandler extends ResourceHandler(User) {
+class UserHandler extends ResourceHandler(User, 'id') {
   static retrievePassword (req, res, next) {
     let b64Password = req.get('encp')
 

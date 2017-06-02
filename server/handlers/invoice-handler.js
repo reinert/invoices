@@ -1,11 +1,13 @@
 const ResourceHandler = require('./resource-handler')
 const { Invoice, InvoiceItem } = require('../../core')
 
-class InvoiceHandler extends ResourceHandler(Invoice) {
+class InvoiceHandler extends ResourceHandler(Invoice, 'id') {
   // executed after #retrieveOptions
   static processIncludeOption (req, res, next) {
-    if (!req.options || !req.options.include) return next()
+    if (!req.options.include) return next()
 
+    // if it was requested to fetch items, then specify in the include option
+    // the InvoiceItem model so db (sequelize) can join correctly
     const idx = req.options.include.indexOf('items')
     if (idx !== -1) {
       req.options.include[idx] = { model: InvoiceItem, as: 'items' }
@@ -17,7 +19,7 @@ class InvoiceHandler extends ResourceHandler(Invoice) {
   // @override
   static create (req, res, next) {
     if (req.body.type === 'DETAILED') {
-      req.options = { include: [ 'items' ] }
+      req.options.include = [ 'items' ]
     }
 
     super.create(req, res, next)

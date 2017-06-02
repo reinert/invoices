@@ -1,5 +1,6 @@
 const fs = require('fs')
 const Sequelize = require('sequelize')
+const humps = require('humps')
 
 const {
   Entity,
@@ -14,10 +15,13 @@ class SequelizeRepository extends Repository {
   // @override
   static find (Entity, options = {}) {
     processOptions(options, Entity)
-    if (options.hasOwnProperty('id')) {
-      return getModel(Entity).findById(options.id, options)
+    if (options.pk) {
+      options.where = Object.assign(options.where || {}, options.pk)
+      options.where = humps.decamelizeKeys(options.where)
+      return getModel(Entity).findOne(options)
         .then(instance => instance ? new Entity(instance) : null)
     } else {
+      options.where = humps.decamelizeKeys(options.where)
       return getModel(Entity).findAll(options)
         .then(instances => instances ? proxyArray(Entity, instances) : null)
     }
@@ -26,6 +30,8 @@ class SequelizeRepository extends Repository {
   // @override
   static save (entity, options = {}) {
     processOptions(options, entity)
+    // TODO: Only use transaction if options.include is not empty
+    // If so, validate before starting the transaction
     return datasource.transaction((t) =>
       ensureInstance(entity, options)._holder.save(options))
       .then(instance => instance ? new entity.constructor(instance) : null)

@@ -2,8 +2,12 @@ const errors = require('./errors')
 const Entity = require('./entity')
 const Repository = require('./repository')
 const User = require('./user')
-const { Invoice, SimpleInvoice, DetailedInvoice } = require('./invoice')
-const InvoiceItem = require('./invoice-item')
+const {
+  Invoice,
+  SimpleInvoice,
+  DetailedInvoice,
+  InvoiceItem
+} = require('./invoice')
 
 module.exports = {
   errors,

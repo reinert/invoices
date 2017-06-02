@@ -2,7 +2,7 @@ const express = require('express')
 const expressJwt = require('express-jwt')
 const { UserHandler } = require('../handlers')
 
-const ID_PARAM = 'id'
+const ID_PARAM = UserHandler.ID_PARAM
 const ID_PATH = `/:${ID_PARAM}([0-9]+)`
 
 const router = express.Router()

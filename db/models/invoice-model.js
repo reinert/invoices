@@ -71,6 +71,7 @@ function excludeAmount (instance, options) {
 }
 
 function restoreAmount (instance, options) {
+  console.info('### INVOICE ####')
   if (instance.type === 'DETAILED') {
     instance.amount = instance._previousAmount
   }

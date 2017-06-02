@@ -1,8 +1,9 @@
 const express = require('express')
 const expressJwt = require('express-jwt')
 const { InvoiceHandler } = require('../handlers')
+const invoiceItemRouter = require('./invoice-item-router')
 
-const ID_PARAM = 'id'
+const ID_PARAM = InvoiceHandler.ID_PARAM
 const ID_PATH = `/:${ID_PARAM}([0-9]+)`
 
 const router = express.Router()
@@ -22,5 +23,7 @@ router.route(ID_PATH)
   .patch(InvoiceHandler.merge)
   .put(InvoiceHandler.update)
   .delete(InvoiceHandler.delete)
+
+router.use(invoiceItemRouter)
 
 module.exports = router

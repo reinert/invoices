@@ -20,11 +20,12 @@
     "express-jwt": "^5.1.0",
     "helmet": "^3.5.0",
     "http-status": "^1.0.1",
+    "humps": "^2.0.0",
     "jsonwebtoken": "^7.3.0",
     "morgan": "^1.8.1",
     "pg": "^6.2.2",
     "pg-native": "^1.10.1",
-    "sequelize": "^3.30.2",
+    "sequelize": "^3.30.4",
     "sqlite3": "^3.1.8"
   },
   "devDependencies": {

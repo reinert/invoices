@@ -1,6 +1,5 @@
 const PersistentEntity = require('./persistent-entity')
 const User = require('./user')
-const InvoiceItem = require('./invoice-item')
 const { InvalidArgumentException } = require('./errors')
 
 class Invoice extends PersistentEntity {
@@ -23,8 +22,7 @@ class Invoice extends PersistentEntity {
         type: String
       },
       'amount': {
-        type: Number,
-        value: 0.00
+        type: Number
       },
       'providerName': {
         type: String
@@ -52,7 +50,8 @@ class Invoice extends PersistentEntity {
 class SimpleInvoice extends Invoice {
   static get properties () {
     return {
-      'type': { value: 'SIMPLE' }
+      'type': { value: 'SIMPLE' },
+      'amount': { value: 0.00 }
     }
   }
 }
@@ -62,6 +61,9 @@ class DetailedInvoice extends Invoice {
     return {
       'type': {
         value: 'DETAILED'
+      },
+      'amount': {
+        value: 0.00
       },
       'items': {
         type: Array.of(InvoiceItem),
@@ -90,4 +92,38 @@ class DetailedInvoice extends Invoice {
   }
 }
 
-module.exports = { Invoice, SimpleInvoice, DetailedInvoice }
+class InvoiceItem extends PersistentEntity {
+  static get properties () {
+    return {
+      'invoiceId': {
+        type: Number,
+        required: true
+      },
+      'description': {
+        type: String
+      },
+      'quantity': {
+        type: Number
+      },
+      'unitPrice': {
+        type: Number
+      },
+      'amount': {
+        type: Number,
+        computed: '_computeAmount',
+        notify: true
+      }
+    }
+  }
+
+  _computeAmount (quantity, unitPrice) {
+    return quantity * unitPrice
+  }
+
+  toString () {
+    return `InvoiceItem: { invoiceId: ${this.invoiceId}, id: ${this.id}, ` +
+      `description: ${this.description}, amount: ${this.amount} }`
+  }
+}
+
+module.exports = { Invoice, SimpleInvoice, DetailedInvoice, InvoiceItem }
