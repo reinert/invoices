@@ -1,8 +1,10 @@
 require('./precheck')
 
-const config = require('./config/server')
 const server = require('./server')
 const setup = require('./setup')
+
+const serverConfigPath = process.env.SERVER_CONFIG || './server/config'
+const config = require(serverConfigPath)
 
 setup()
   .then(() => {

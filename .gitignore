@@ -8,3 +8,4 @@ data
 *.swo
 *.log
 ignore
+config

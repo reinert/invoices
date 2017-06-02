@@ -1,5 +1,7 @@
 const Sequelize = require('sequelize')
-const config = require('../config/datasource')
+
+const dsPath = process.env.DATASOURCE_CONFIG || '../db/config'
+const config = require(dsPath)
 
 const env = process.env.NODE_ENV || 'development'
 const con = config[env]
