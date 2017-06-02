@@ -16,7 +16,7 @@ function getModel (Entity) {
   if (Entity === SimpleInvoice) return InvoiceModel
   if (Entity === DetailedInvoice) return InvoiceModel
   if (Entity === InvoiceItem) return InvoiceItemModel
-  throw new NonexistentEntityError()
+  throw new NonexistentEntityError(Entity)
 }
 
 module.exports = getModel

@@ -9,7 +9,7 @@ const expect = chai.expect
 
 const createTests = (beforeEachFunc) => function () {
   this.invoice = null
-  this.preViousamount = null
+  this.previousAmount = null
 
   beforeEach(beforeEachFunc)
 
@@ -26,62 +26,62 @@ const createTests = (beforeEachFunc) => function () {
   })
 
   it("'s amount is the sum of the items' amounts", function () {
-    expect(this.invoice).to.have.property('amount', this.preViousamount)
+    expect(this.invoice).to.have.property('amount', this.previousAmount)
   })
 
   it('updates amount when a new item is added', function () {
     this.invoice.items.push({ description: 'D', quantity: 2, unitPrice: 1.10 })
-    expect(this.invoice).to.have.property('amount', this.preViousamount + 2.20)
-    this.preViousamount = this.invoice.amount
+    expect(this.invoice).to.have.property('amount', this.previousAmount + 2.20)
+    this.previousAmount = this.invoice.amount
 
     this.invoice.items.unshift({ description: 'E', quantity: 1, unitPrice: 0.80 })
-    expect(this.invoice).to.have.property('amount', this.preViousamount + 0.80)
-    this.preViousamount = this.invoice.amount
+    expect(this.invoice).to.have.property('amount', this.previousAmount + 0.80)
+    this.previousAmount = this.invoice.amount
 
     this.invoice.items.splice(2, 0,
       { description: 'F', quantity: 1, unitPrice: 2.00 },
       { description: 'G', quantity: 2, unitPrice: 2.50 }
     )
-    expect(this.invoice).to.have.property('amount', this.preViousamount + 2 + 5)
+    expect(this.invoice).to.have.property('amount', this.previousAmount + 2 + 5)
   })
 
   it('updates amount when an item is removed', function () {
     let rm = null
 
     rm = this.invoice.items.splice(1, 1)[0]
-    expect(this.invoice).to.have.property('amount', this.preViousamount - rm.amount)
-    this.preViousamount = this.invoice.amount
+    expect(this.invoice).to.have.property('amount', this.previousAmount - rm.amount)
+    this.previousAmount = this.invoice.amount
 
     rm = this.invoice.items.pop()
-    expect(this.invoice).to.have.property('amount', this.preViousamount - rm.amount)
-    this.preViousamount = this.invoice.amount
+    expect(this.invoice).to.have.property('amount', this.previousAmount - rm.amount)
+    this.previousAmount = this.invoice.amount
 
     rm = this.invoice.items.shift()
-    expect(this.invoice).to.have.property('amount', this.preViousamount - rm.amount)
+    expect(this.invoice).to.have.property('amount', this.previousAmount - rm.amount)
   })
 
   it("updates amount when an item has it's amount changed", function () {
     this.invoice.items[0].quantity = 2
-    expect(this.invoice).to.have.property('amount', this.preViousamount + 1)
-    this.preViousamount = this.invoice.amount
+    expect(this.invoice).to.have.property('amount', this.previousAmount + 1)
+    this.previousAmount = this.invoice.amount
 
     this.invoice.items[1].unitPrice = 3.00
-    expect(this.invoice).to.have.property('amount', this.preViousamount + 2)
-    this.preViousamount = this.invoice.amount
+    expect(this.invoice).to.have.property('amount', this.previousAmount + 2)
+    this.previousAmount = this.invoice.amount
 
     this.invoice.items.push({ description: 'D', quantity: 1, unitPrice: 2.00 })
-    expect(this.invoice).to.have.property('amount', this.preViousamount + 2.00)
-    this.preViousamount = this.invoice.amount
+    expect(this.invoice).to.have.property('amount', this.previousAmount + 2.00)
+    this.previousAmount = this.invoice.amount
     this.invoice.items[3].quantity = 2
-    expect(this.invoice).to.have.property('amount', this.preViousamount + 2.00)
-    this.preViousamount = this.invoice.amount
+    expect(this.invoice).to.have.property('amount', this.previousAmount + 2.00)
+    this.previousAmount = this.invoice.amount
 
     this.invoice.items.push(
       new InvoiceItem({ description: 'E', quantity: 1, unitPrice: 3.00 }))
-    expect(this.invoice).to.have.property('amount', this.preViousamount + 3.00)
-    this.preViousamount = this.invoice.amount
+    expect(this.invoice).to.have.property('amount', this.previousAmount + 3.00)
+    this.previousAmount = this.invoice.amount
     this.invoice.items[4].unitPrice = 5.00
-    expect(this.invoice).to.have.property('amount', this.preViousamount + 2.00)
+    expect(this.invoice).to.have.property('amount', this.previousAmount + 2.00)
   })
 }
 
@@ -96,7 +96,7 @@ describe('DetailedInvoice', createTests(function () {
     ]
   })
 
-  this.preViousamount = 15.00
+  this.previousAmount = 15.00
 }))
 
 describe('DetailedInvoice with Holder', createTests(function () {
@@ -111,5 +111,5 @@ describe('DetailedInvoice with Holder', createTests(function () {
     ]
   }))
 
-  this.preViousamount = 15.00
+  this.previousAmount = 15.00
 }))

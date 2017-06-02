@@ -10,11 +10,13 @@ class AuthHandler {
       const message = 'email header must be informed'
       return next(new ApiError(message, HttpStatus.BAD_REQUEST))
     }
+
     if (!req.password) {
       const message = 'encp header must be informed'
       return next(new ApiError(message, HttpStatus.BAD_REQUEST))
     }
-    Repository.find(User, { where: { 'email': req.get('email') } })
+
+    Repository.find(User, { where: { email: req.get('email') } })
       .then(users => {
         if (users.length !== 1) {
           const message = 'Invalid credentials'

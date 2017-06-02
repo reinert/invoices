@@ -1,6 +1,7 @@
 {
   "development": {
     "dialect": "postgres",
+    "native": true,
     "username": "invoices",
     "password": "invoices",
     "host": "localhost",
@@ -13,6 +14,7 @@
   },
   "test": {
     "dialect": "postgres",
+    "native": true,
     "username": "invoices",
     "password": "invoices",
     "host": "localhost",
@@ -25,6 +27,7 @@
   },
   "production": {
     "dialect": "postgres",
+    "native": true,
     "username": "invoices",
     "password": "invoices",
     "host": "localhost",

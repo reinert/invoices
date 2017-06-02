@@ -13,7 +13,7 @@ const getModel = require('./entity-model-map')
 class SequelizeRepository extends Repository {
   // @override
   static find (Entity, options = {}) {
-    processOptions(options)
+    processOptions(options, Entity)
     if (options.hasOwnProperty('id')) {
       return getModel(Entity).findById(options.id, options)
         .then(instance => instance ? new Entity(instance) : null)
@@ -25,7 +25,7 @@ class SequelizeRepository extends Repository {
 
   // @override
   static save (entity, options = {}) {
-    processOptions(options)
+    processOptions(options, entity)
     return datasource.transaction((t) =>
       ensureInstance(entity, options)._holder.save(options))
       .then(instance => instance ? new entity.constructor(instance) : null)
@@ -33,7 +33,7 @@ class SequelizeRepository extends Repository {
 
   // @override
   static destroy (entity, options = {}) {
-    processOptions(options)
+    processOptions(options, entity)
     return ensureInstance(entity, options)._holder.destroy(options)
   }
 
@@ -51,12 +51,13 @@ function exec (file) {
     { raw: true })
 }
 
-function proxyArray (Constructor, arr) {
+function proxyArray (Entity, arr) {
   return new Proxy(arr, {
     get (target, key, receiver) {
       if (typeof key === 'number' || isNumeric(key)) {
         if (target[key] instanceof Sequelize.Instance) {
-          target[key] = new Constructor(target[key])
+          target[key] = typeof Entity.create === 'function'
+            ? Entity.create(target[key]) : new Entity(target[key])
         }
       }
       return Reflect.get(target, key, receiver)
@@ -72,7 +73,7 @@ function ensureInstance (entity, options) {
   for (let p of entity.constructor.metadata.getProperties()) {
     if (entity.p) {
       let pOptions = options.propOptions ? options.propOptions[p] : null
-      processOptions(pOptions)
+      processOptions(pOptions, entity.p)
       if (entity.constructor.metadata.isTypeEntity(p)) {
         entity.p._holder =
           getModel(entity.p.constructor).build(entity.p._holder, pOptions)
@@ -87,33 +88,45 @@ function ensureInstance (entity, options) {
   return entity
 }
 
-function processOptions (opt) {
-  if (opt == null) return
+function processOptions (opt, entity) {
+  if (!opt || !opt.include) return
 
-  if (opt.include) {
-    for (let i in opt.include) {
-      let entityIncl = opt.include[i]
+  for (let i in opt.include) {
+    let item = opt.include[i]
 
-      if (entityIncl == null) continue
+    if (item == null) continue
 
-      if (entityIncl.prototype instanceof Entity) {
-        opt.include[i] = getModel(entityIncl)
-      } else if (isAliasModel(entityIncl)) {
-        entityIncl.model = getModel(entityIncl.model)
-      } else {
-        console.log(entityIncl)
-        let arg = entityIncl.name ? entityIncl.name : entityIncl.toString()
-        throw new InvalidArgumentError(
-          `${arg} is not a valid argument for the include option.` +
-          `It should be either an Entity successor constructor or an alias` +
-          `object in the form of { model: Entity, as: 'alias' }.`)
-      }
+    if (typeof item === 'string') {
+      const meta = typeof entity === 'object'
+        ? entity.constructor.metadata
+        : entity.metadata
+      const type = meta.isArrayTypeWithGenericEntity(item)
+        ? meta.getGenericType(item)
+        : meta.getType(item)
+      opt.include[i] = { model: getModel(type), as: item }
+      return
     }
+
+    if (item.prototype instanceof Entity) {
+      opt.include[i] = getModel(item)
+      return
+    }
+
+    if (isAliasModel(item)) {
+      item.model = getModel(item.model)
+      return
+    }
+
+    let arg = item.name ? item.name : item.toString()
+    throw new InvalidArgumentError(
+      `${arg} is not a valid argument for the include option.` +
+      `It should be either an Entity successor constructor or an alias` +
+      `object in the form of { model: Entity, as: 'alias' }.`)
   }
 }
 
-function isAliasModel (opt) {
-  return typeof opt.model === 'function' && typeof opt.as === 'string'
+function isAliasModel (inclItem) {
+  return typeof inclItem.model === 'function' && typeof inclItem.as === 'string'
 }
 
 function isNumeric (v) {

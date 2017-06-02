@@ -1,7 +1,6 @@
 const { Repository } = require('./db')
 const {
   User,
-  InvoiceItem,
   DetailedInvoice,
   SimpleInvoice,
   Invoice
@@ -30,7 +29,7 @@ function setup () {
               { description: 'B', quantity: 2, unitPrice: 2.00 },
               { description: 'C', quantity: 4, unitPrice: 2.50 }
           ]
-        }), { include: [ { model: InvoiceItem, as: 'items' } ] }))
+        }), { include: [ 'items' ] }))
         .then((invoice) => console.log('DETAILED ==>', JSON.stringify(invoice, null, 2), '\n'))
         .then(() => Repository.save(new SimpleInvoice({ user: john, amount: 10, invoiceDate: new Date() })))
         .then((invoice) => console.log('SIMPLE ==>', JSON.stringify(invoice, null, 2), '\n'))
@@ -44,7 +43,7 @@ function setup () {
             { description: 'i1', quantity: 3, unitPrice: 3.00 },
             { description: 'i2', quantity: 4, unitPrice: 4.00 }
           ]
-        }), { include: [ { model: InvoiceItem, as: 'items' } ] }))
+        }), { include: [ 'items' ] }))
         .then((invoice) => console.log('DETAILED ==>', JSON.stringify(invoice, null, 2), '\n'))
         .then(() => Repository.find(Invoice))
         .then((invoices) => { console.log(invoices); console.log(JSON.stringify(invoices, null, 2)) })

@@ -14,7 +14,7 @@ const InvoiceItemModel = datasource.define('invoiceItem', {
   id: {
     type: Sequelize.INTEGER,
     primaryKey: true,
-    set: function () {}
+    set: false
   },
   quantity: {
     type: Sequelize.DECIMAL(10, 2),
@@ -33,7 +33,7 @@ const InvoiceItemModel = datasource.define('invoiceItem', {
   }
 })
 
-InvoiceItemModel.belongsTo(InvoiceModel)
+InvoiceItemModel.belongsTo(InvoiceModel, { onDelete: 'cascade' })
 InvoiceModel.hasMany(InvoiceItemModel, { as: 'items' })
 
 module.exports = InvoiceItemModel

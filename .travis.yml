@@ -9,3 +9,9 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-4.8
+services:
+  - postgresql
+addons:
+  postgresql: "9.4"
+before_script:
+  - psql -c "CREATE DATABASE invoices_test;" -U postgres

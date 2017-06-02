@@ -41,6 +41,11 @@ const InvoiceModel = datasource.define('invoice', {
     references: {
       model: UserModel,
       key: 'id'
+    },
+    set: function (userId) {
+      if (!this.user || this.user.id !== userId) {
+        this.set('user', { id: userId })
+      }
     }
   },
   user: {
@@ -56,6 +61,7 @@ InvoiceModel.addHook('beforeCreate', excludeAmount)
 InvoiceModel.addHook('beforeUpdate', excludeAmount)
 InvoiceModel.addHook('afterCreate', restoreAmount)
 InvoiceModel.addHook('afterUpdate', restoreAmount)
+InvoiceModel.addHook('afterFind', setUserById)
 
 function excludeAmount (instance, options) {
   if (instance.type === 'DETAILED') {
@@ -67,6 +73,18 @@ function excludeAmount (instance, options) {
 function restoreAmount (instance, options) {
   if (instance.type === 'DETAILED') {
     instance.amount = instance._previousAmount
+  }
+}
+
+function setUserById (result, options) {
+  if (result == null) return
+
+  if (Array.isArray(result)) {
+    for (let instance of result) {
+      instance.setDataValue('user', { id: instance.userId })
+    }
+  } else {
+    result.setDataValue('user', { id: result.userId })
   }
 }
 
