@@ -19,7 +19,7 @@ class SequelizeRepository extends Repository {
       options.where = Object.assign(options.where || {}, options.pk)
       options.where = humps.decamelizeKeys(options.where)
       return getModel(Entity).findOne(options)
-        .then(instance => instance ? new Entity(instance) : null)
+        .then(instance => asEntity(Entity, instance))
     } else {
       options.where = humps.decamelizeKeys(options.where)
       return getModel(Entity).findAll(options)
@@ -34,7 +34,7 @@ class SequelizeRepository extends Repository {
     // If so, validate before starting the transaction
     return datasource.transaction((t) =>
       ensureInstance(entity, options)._holder.save(options))
-      .then(instance => instance ? new entity.constructor(instance) : null)
+      .then(instance => asEntity(entity.constructor, instance))
   }
 
   // @override
@@ -62,13 +62,20 @@ function proxyArray (Entity, arr) {
     get (target, key, receiver) {
       if (typeof key === 'number' || isNumeric(key)) {
         if (target[key] instanceof Sequelize.Instance) {
-          target[key] = typeof Entity.create === 'function'
-            ? Entity.create(target[key]) : new Entity(target[key])
+          target[key] = asEntity(Entity, target[key])
         }
       }
       return Reflect.get(target, key, receiver)
     }
   })
+}
+
+function asEntity (Entity, values) {
+  if (!values) return null
+
+  return typeof Entity.create === 'function'
+    ? Entity.create(values)
+    : new Entity(values)
 }
 
 function ensureInstance (entity, options) {

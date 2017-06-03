@@ -22,21 +22,7 @@ module.exports = (Entity, idProp, parentProp) =>
     // @override
     static create (req, res, next) {
       req.body = Object.assign(req.body || {}, req.options.pk)
-      
+
       return super.create(req, res, next)
-    }
-
-    // @override
-    static merge (req, res, next) {
-      req.body = Object.assign(req.body || {}, req.options.pk)
-
-      return super.merge(req, res, next)
-    }
-
-    // @override
-    static update (req, res, next) {
-      req.body = Object.assign(req.body || {}, req.options.pk)
-
-      return super.update(req, res, next)
     }
 }

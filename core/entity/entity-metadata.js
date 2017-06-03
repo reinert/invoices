@@ -100,14 +100,21 @@ class EntityMetadata {
   }
 
   isArrayTypeWithGenericEntity (property) {
-    if (this.properties[property].type !== Array ||
-      this.properties[property].genericType == null) return false
-    return this.properties[property].genericType.prototype instanceof EventEmitter
+    const isNotArray = this.properties[property].type !== Array
+    const isNotGenericArray = this.properties[property].genericType == null
+
+    if (isNotArray || isNotGenericArray) return false
+
+    return this.properties[property].genericType.prototype instanceof
+      EventEmitter
   }
 
+  // @deprecated
   isGenericTypeEntity (property) {
     if (!this.properties[property].genericType) return false
-    return this.properties[property].genericType.prototype instanceof EventEmitter
+
+    return this.properties[property].genericType.prototype instanceof
+      EventEmitter
   }
 
   hasObserver (property) {
@@ -224,7 +231,8 @@ function processDescriptor (meta, propName, propMetadata) {
   }
 
   if (propMetadata.itemObserver) {
-    assertTypeIsEventEmitterSuccessorOrArray(propName, propMetadata, 'itemObserver')
+    assertTypeIsEventEmitterSuccessorOrArray(propName, propMetadata,
+      'itemObserver')
   }
 
   meta.properties[propName].descriptor = d
@@ -283,13 +291,17 @@ function assertDependencyExists (meta, propName, depName) {
 }
 
 function assertTypeIsArray (propName, propMetadata, metaProp) {
-  assert(propMetadata.type === Array || propMetadata.type.prototype instanceof EventEmitter,
+  assert(
+    propMetadata.type === Array ||
+    propMetadata.type.prototype instanceof EventEmitter,
     `Misplaced ${metaProp} at ${propName}. It must be declared in a property` +
     ` of a type Array.`)
 }
 
 function assertTypeIsEventEmitterSuccessorOrArray (propName, propMetadata, metaProp) {
-  assert(propMetadata.type === Array || propMetadata.type.prototype instanceof EventEmitter,
+  assert(
+    propMetadata.type === Array ||
+    propMetadata.type.prototype instanceof EventEmitter,
     `Misplaced ${metaProp} at ${propName}. It must be declared in a property` +
     ` of a type inheriting from EventEmitter or Array.`)
 }
@@ -300,9 +312,11 @@ function assertArrayObserverHasInsertAndDelete (propName, propMetadata) {
     `${propName}'s arrayObserver must have 'insert' and 'delete' observers.`)
 }
 
-function assertArrayObserverFunctionIsInPrototype (funcRef, entityCtor, propName,
-  propMetadata) {
-  assert(typeof entityCtor.prototype[propMetadata.arrayObserver[funcRef]] === 'function',
+function assertArrayObserverFunctionIsInPrototype
+  (funcRef, entityCtor, propName, propMetadata) {
+  const funcKey = propMetadata.arrayObserver[funcRef]
+  assert(
+    typeof entityCtor.prototype[funcKey] === 'function',
     `${propMetadata.arrayObserver[funcRef]} ${funcRef} function not found` +
     ` in ${entityCtor.name} prototype.`)
 }

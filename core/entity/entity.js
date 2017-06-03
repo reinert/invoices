@@ -257,7 +257,8 @@ function processInstance (entity, values, options) {
 
     if (isValuesHolder && values.get(p) !== undefined) {
       // ensure values in holder are coerced
-      values.set(p, entity.__coerce(p, values.get(p), { skipNotification: true }))
+      const v = entity.__coerce(p, values.get(p), { skipNotification: true })
+      values.set(p, v)
     }
   }
 }

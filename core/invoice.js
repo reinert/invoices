@@ -33,10 +33,11 @@ class Invoice extends PersistentEntity {
     }
   }
 
-  static create (values) {
+  // Factory method supported by Entity to build entities on an abstract level
+  static create (values, options) {
     if (values == null) return null
-    if (values.type === 'SIMPLE') return new SimpleInvoice(values)
-    if (values.type === 'DETAILED') return new DetailedInvoice(values)
+    if (values.type === 'SIMPLE') return new SimpleInvoice(values, options)
+    if (values.type === 'DETAILED') return new DetailedInvoice(values, options)
     throw new InvalidArgumentException('Invoice must have type = ' +
       '{SIMPLE | DETAILED}, otherwise is invalid.', values)
   }
@@ -63,7 +64,8 @@ class DetailedInvoice extends Invoice {
         value: 'DETAILED'
       },
       'amount': {
-        value: 0.00
+        value: 0.00,
+        readOnly: true
       },
       'items': {
         type: Array.of(InvoiceItem),
@@ -79,16 +81,18 @@ class DetailedInvoice extends Invoice {
   }
 
   _onItemInsert (item) {
-    this.amount += item.amount
+    // #_set with force=true to bypass readOnly restriction
+    this._set('amount', this.amount + item.amount, true)
   }
 
   _onItemDelete (item) {
-    this.amount -= item.amount
+    // #_set with force=true to bypass readOnly restriction
+    this._set('amount', this.amount - item.amount, true)
   }
 
   _onItemAmountChange (amount, old) {
     if (old === undefined) old = 0
-    this.amount = this.amount + amount - old
+    this._set('amount', this.amount + amount - old, true)
   }
 }
 
@@ -97,7 +101,8 @@ class InvoiceItem extends PersistentEntity {
     return {
       'invoiceId': {
         type: Number,
-        required: true
+        required: true,
+        readOnly: true
       },
       'description': {
         type: String
@@ -110,7 +115,7 @@ class InvoiceItem extends PersistentEntity {
       },
       'amount': {
         type: Number,
-        computed: '_computeAmount',
+        computed: '_computeAmount', // optionally, put inline function
         notify: true
       }
     }

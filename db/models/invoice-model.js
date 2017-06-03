@@ -51,7 +51,7 @@ const InvoiceModel = datasource.define('invoice', {
   user: {
     type: Sequelize.VIRTUAL,
     set: function (user) {
-      this.setDataValue('userId', user.id)
+      this.setDataValue('userId', user ? user.id : null)
       this.setDataValue('user', user)
     }
   }
