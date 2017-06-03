@@ -6,7 +6,7 @@ const {
   Invoice
 } = require('./core')
 
-let john = new User({ firstName: 'john', lastName: 'bar', email: 'john@bar.com' })
+let john = new User({ firstName: 'jon', lastName: 'bar', email: 'jon@bar.com' })
 let bob = new User({ firstName: 'bob', lastName: 'foo', email: 'bob@foo.com' })
 
 /**
@@ -30,9 +30,11 @@ function setup () {
               { description: 'C', quantity: 4, unitPrice: 2.50 }
           ]
         }), { include: [ 'items' ] }))
-        .then((invoice) => console.log('DETAILED ==>', JSON.stringify(invoice, null, 2), '\n'))
-        .then(() => Repository.save(new SimpleInvoice({ user: john, amount: 10, invoiceDate: new Date() })))
-        .then((invoice) => console.log('SIMPLE ==>', JSON.stringify(invoice, null, 2), '\n'))
+        .then(() => Repository.save(new SimpleInvoice({
+          user: john,
+          amount: 10,
+          invoiceDate: new Date()
+        })))
         .then(() => bob.setPassword('123456'))
         .then((bob) => Repository.save(bob))
         .then((user) => { bob = user })
@@ -44,9 +46,7 @@ function setup () {
             { description: 'i2', quantity: 4, unitPrice: 4.00 }
           ]
         }), { include: [ 'items' ] }))
-        .then((invoice) => console.log('DETAILED ==>', JSON.stringify(invoice, null, 2), '\n'))
         .then(() => Repository.find(Invoice))
-        .then((invoices) => { console.log(invoices); console.log(JSON.stringify(invoices, null, 2)) })
         .then(() => console.log('Development setup done!'))
         .catch((err) => {
           console.log('Error while syncing DB...')

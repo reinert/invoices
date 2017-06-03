@@ -51,8 +51,12 @@ class Invoice extends PersistentEntity {
 class SimpleInvoice extends Invoice {
   static get properties () {
     return {
-      'type': { value: 'SIMPLE' },
-      'amount': { value: 0.00 }
+      'type': {
+        value: 'SIMPLE'
+      },
+      'amount': {
+        value: 0.00
+      }
     }
   }
 }
