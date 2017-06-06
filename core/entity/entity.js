@@ -95,6 +95,7 @@ class Entity extends EventEmitter {
     const newValue = this.__coerce(property, value,
       { skipNotification: options.isDefault })
     const oldValue = this._holder.get(property)
+
     if (newValue === oldValue) return
     this._holder.set(property, newValue)
     const skipNotification = options.skipNotification || options.isDefault
@@ -173,6 +174,13 @@ function processInstance (entity, values, options) {
   const meta = entity.constructor.metadata
   const isValuesHolder = isHolder(values)
 
+  Object.defineProperties(entity, {
+    'domain': { enumerable: false },
+    '_events': { enumerable: false },
+    '_eventsCount': { enumerable: false },
+    '_maxListeners': { enumerable: false }
+  })
+
   Object.defineProperty(entity, '_holder', {
     value: isValuesHolder ? values : new Holder(),
     enumerable: false,
@@ -236,13 +244,21 @@ function processInstance (entity, values, options) {
 
     // set default value if necessary
     if (meta.isDefault(p)) {
-      entity.__set(p, meta.getDefaultValue(p), { isDefault: true })
+      if (!isValuesHolder || entity._get(p) === undefined) {
+        entity.__set(p, meta.getDefaultValue(p), { isDefault: true })
+      }
     }
 
     // set the values passed in constructor when appropriate
     if (!isValuesHolder && values.hasOwnProperty(p) &&
       !(entity.__isPrivate(p) || entity.__isDefaultReadOnly(p))) {
       entity.__set(p, values[p], options)
+    }
+
+    if (isValuesHolder && values.get(p) !== undefined) {
+      // ensure values in holder are coerced
+      const v = entity.__coerce(p, values.get(p), { skipNotification: true })
+      values.set(p, v)
     }
   }
 }

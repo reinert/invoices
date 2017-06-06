@@ -1,4 +1,4 @@
-const datasource = require('./datasource')
+const datasource = require('../datasource')
 const Sequelize = require('sequelize')
 
 const UserModel = datasource.define('user', {
@@ -38,8 +38,8 @@ const UserModel = datasource.define('user', {
     allowNull: false
   },
   lastName: {
-    type: Sequelize.STRING,
-    allowNull: false
+    type: Sequelize.STRING
+    // allowNull: false
   }
 })
 

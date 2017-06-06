@@ -186,7 +186,9 @@ class Coercer {
       if (options.itemObserver) value._bindObservers(options.itemObserver)
     } else {
       if (this.strict) throw new TypeError(`"${value}" is not a ${Type.name}`)
-      value = new Type(value, options)
+      value = typeof Type.create === 'function'
+        ? Type.create(value, options)
+        : new Type(value, options)
     }
 
     return value
@@ -194,7 +196,7 @@ class Coercer {
 }
 
 function isNumeric (value) {
-  return !isNaN(parseFloat(value)) && isFinite(value)
+  return typeof v !== 'symbol' && !isNaN(parseFloat(value)) && isFinite(value)
 }
 
 module.exports = Coercer

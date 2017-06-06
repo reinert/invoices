@@ -1,5 +1,13 @@
 const { Repository } = require('./db')
-const { User } = require('./core')
+const {
+  User,
+  DetailedInvoice,
+  SimpleInvoice,
+  Invoice
+} = require('./core')
+
+let john = new User({ firstName: 'jon', lastName: 'bar', email: 'jon@bar.com' })
+let bob = new User({ firstName: 'bob', lastName: 'foo', email: 'bob@foo.com' })
 
 /**
  * Setup the app prerequisites required before starting the server
@@ -9,12 +17,36 @@ const { User } = require('./core')
 function setup () {
   switch (process.env.NODE_ENV) {
     case 'development':
-      return Repository.sync({force: true})
-        .then(() => {
-          const user = new User({username: 'john', email: 'john@bar.com'})
-          return user.setPassword('123456')
-        })
-        .then((user) => Repository.save(user))
+      return Repository.sync({ force: true })
+        .then(() => john.setPassword('123456'))
+        .then((john) => Repository.save(john))
+        .then((user) => { john = user })
+        .then(() => Repository.save(new DetailedInvoice({
+          user: john,
+          invoiceDate: new Date(),
+          items: [
+              { description: 'A', quantity: 1, unitPrice: 1.00 },
+              { description: 'B', quantity: 2, unitPrice: 2.00 },
+              { description: 'C', quantity: 4, unitPrice: 2.50 }
+          ]
+        }), { include: [ 'items' ] }))
+        .then(() => Repository.save(new SimpleInvoice({
+          user: john,
+          amount: 10,
+          invoiceDate: new Date()
+        })))
+        .then(() => bob.setPassword('123456'))
+        .then((bob) => Repository.save(bob))
+        .then((user) => { bob = user })
+        .then(() => Repository.save(new DetailedInvoice({
+          user: bob,
+          invoiceDate: new Date(),
+          items: [
+            { description: 'i1', quantity: 3, unitPrice: 3.00 },
+            { description: 'i2', quantity: 4, unitPrice: 4.00 }
+          ]
+        }), { include: [ 'items' ] }))
+        .then(() => Repository.find(Invoice))
         .then(() => console.log('Development setup done!'))
         .catch((err) => {
           console.log('Error while syncing DB...')

@@ -1,6 +1,9 @@
 /* global describe beforeEach it */
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
+
+require('dotenv').config()
+
 const { User } = require('../../core')
 const { Repository } = require('../../db')
 

@@ -7,7 +7,7 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "npm run start:dev",
-    "start:dev": "cross-env NODE_ENV=development nodemon index.js --exec \"standard && node\"",
+    "start:dev": "cross-env NODE_ENV=development nodemon --inspect index.js --exec \"node\"",
     "start:prod": "cross-env NODE_ENV=production node index.js",
     "test": "standard && cross-env NODE_ENV=test mocha --recursive",
     "lint": "standard --fix"
@@ -20,9 +20,12 @@
     "express-jwt": "^5.1.0",
     "helmet": "^3.5.0",
     "http-status": "^1.0.1",
+    "humps": "^2.0.0",
     "jsonwebtoken": "^7.3.0",
     "morgan": "^1.8.1",
-    "sequelize": "^3.30.2",
+    "pg": "^6.2.2",
+    "pg-native": "^1.10.1",
+    "sequelize": "^3.30.4",
     "sqlite3": "^3.1.8"
   },
   "devDependencies": {

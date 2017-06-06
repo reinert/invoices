@@ -91,8 +91,30 @@ class EntityMetadata {
     return this.properties[property].type
   }
 
+  isTypeEntity (property) {
+    return this.properties[property].type.prototype instanceof EventEmitter
+  }
+
   getGenericType (property) {
     return this.properties[property].genericType
+  }
+
+  isArrayTypeWithGenericEntity (property) {
+    const isNotArray = this.properties[property].type !== Array
+    const isNotGenericArray = this.properties[property].genericType == null
+
+    if (isNotArray || isNotGenericArray) return false
+
+    return this.properties[property].genericType.prototype instanceof
+      EventEmitter
+  }
+
+  // @deprecated
+  isGenericTypeEntity (property) {
+    if (!this.properties[property].genericType) return false
+
+    return this.properties[property].genericType.prototype instanceof
+      EventEmitter
   }
 
   hasObserver (property) {
@@ -185,7 +207,7 @@ function processDescriptor (meta, propName, propMetadata) {
     }
     meta.properties[propName].dependencies = dependencies
 
-    // d.get = getComputedGetter()
+    d.get = getComputedGetter(propName, dependencies, propMetadata.computed)
 
     // readOnly by default when computed
     propMetadata.readOnly = true
@@ -209,7 +231,8 @@ function processDescriptor (meta, propName, propMetadata) {
   }
 
   if (propMetadata.itemObserver) {
-    assertTypeIsEventEmitterSuccessorOrArray(propName, propMetadata, 'itemObserver')
+    assertTypeIsEventEmitterSuccessorOrArray(propName, propMetadata,
+      'itemObserver')
   }
 
   meta.properties[propName].descriptor = d
@@ -224,18 +247,31 @@ function getDefaultDescriptor (propName) {
   }
 }
 
-// function getComputedGetter () {
-//   // a computed getter ensures it has been initialized
-//   return () => {
-//     const value = this._holder.get(property)
-//     if (value !== undefined) return value
-//
-//     // compute value if property has not been initialized yet
-//     this._changeListeners[property]()
-//
-//     return this._holder.get(property)
-//   }
-// }
+function getComputedGetter (property, dependencies, computeValue) {
+  // a computed getter ensures it has been initialized
+  return function () {
+    const value = this._holder.get(property)
+
+    if (value !== undefined) return value
+
+    // compute value if property has not been initialized yet
+    const depValues = []
+
+    for (let dep of dependencies) {
+      const depValue = this._get(dep)
+
+      // computed function is only called if all dependencies are set
+      if (depValue === undefined) return
+
+      depValues.push(depValue)
+    }
+
+    // this references entity instance
+    this.__set(property, computeValue(...depValues))
+
+    return this._holder.get(property)
+  }
+}
 
 function assertComputedIsFunctionOrString (entityCtor, propName, propMetadata) {
   if (typeof propMetadata.computed === 'string') {
@@ -255,13 +291,17 @@ function assertDependencyExists (meta, propName, depName) {
 }
 
 function assertTypeIsArray (propName, propMetadata, metaProp) {
-  assert(propMetadata.type === Array || propMetadata.type.prototype instanceof EventEmitter,
+  assert(
+    propMetadata.type === Array ||
+    propMetadata.type.prototype instanceof EventEmitter,
     `Misplaced ${metaProp} at ${propName}. It must be declared in a property` +
     ` of a type Array.`)
 }
 
 function assertTypeIsEventEmitterSuccessorOrArray (propName, propMetadata, metaProp) {
-  assert(propMetadata.type === Array || propMetadata.type.prototype instanceof EventEmitter,
+  assert(
+    propMetadata.type === Array ||
+    propMetadata.type.prototype instanceof EventEmitter,
     `Misplaced ${metaProp} at ${propName}. It must be declared in a property` +
     ` of a type inheriting from EventEmitter or Array.`)
 }
@@ -272,9 +312,11 @@ function assertArrayObserverHasInsertAndDelete (propName, propMetadata) {
     `${propName}'s arrayObserver must have 'insert' and 'delete' observers.`)
 }
 
-function assertArrayObserverFunctionIsInPrototype (funcRef, entityCtor, propName,
-  propMetadata) {
-  assert(typeof entityCtor.prototype[propMetadata.arrayObserver[funcRef]] === 'function',
+function assertArrayObserverFunctionIsInPrototype
+  (funcRef, entityCtor, propName, propMetadata) {
+  const funcKey = propMetadata.arrayObserver[funcRef]
+  assert(
+    typeof entityCtor.prototype[funcKey] === 'function',
     `${propMetadata.arrayObserver[funcRef]} ${funcRef} function not found` +
     ` in ${entityCtor.name} prototype.`)
 }
