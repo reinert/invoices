@@ -24,10 +24,10 @@ class Invoice extends PersistentEntity {
       'amount': {
         type: Number
       },
-      'providerName': {
+      'beneficiaryName': {
         type: String
       },
-      'providerRegistrationNumber': {
+      'beneficiaryRegistrationNumber': {
         type: String
       }
     }
@@ -95,6 +95,7 @@ class DetailedInvoice extends Invoice {
   }
 
   _onItemAmountChange (amount, old) {
+    // TODO: extensively test this check to see if it's really necessary
     if (old === undefined) old = 0
     this._set('amount', this.amount + amount - old, true)
   }

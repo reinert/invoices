@@ -8,11 +8,13 @@ const ID_PATH = `/:${ID_PARAM}([0-9]+)`
 
 const router = express.Router()
 
+router.use(expressJwt({ secret: process.env.JWT_SECRET }))
+
+router.use(invoiceItemRouter)
+
 router.use(InvoiceHandler.retrieveOptions)
 router.use(InvoiceHandler.processIncludeOption)
 router.param(ID_PARAM, InvoiceHandler.retrieveEntity)
-
-router.use(expressJwt({ secret: process.env.JWT_SECRET }))
 
 router.route('/')
   .get(InvoiceHandler.getAll)
@@ -23,7 +25,5 @@ router.route(ID_PATH)
   .patch(InvoiceHandler.merge)
   .put(InvoiceHandler.update)
   .delete(InvoiceHandler.delete)
-
-router.use(invoiceItemRouter)
 
 module.exports = router
