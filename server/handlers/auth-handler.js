@@ -20,7 +20,7 @@ class AuthHandler {
       .then(users => {
         if (users.length !== 1) {
           const message = 'Invalid credentials'
-          return next(new ApiError(message, HttpStatus.UNAUTHORIZED))
+          throw new ApiError(message, HttpStatus.UNAUTHORIZED)
         }
         return users[0]
       })
