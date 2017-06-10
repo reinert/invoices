@@ -11,13 +11,16 @@ const router = express.Router()
 
 router.use(InvoiceItemHandler.retrieveOptions)
 router.param(PARENT_ID_PARAM, InvoiceItemHandler.retrieveParentId)
+router.param(PARENT_ID_PARAM, InvoiceItemHandler.retrieveInvoice)
 router.param(ID_PARAM, InvoiceItemHandler.retrieveEntity)
 
 router.route(ROOT_PATH)
+  .all(InvoiceItemHandler.checkAuthorization)
   .get(InvoiceItemHandler.getAll)
   .post(InvoiceItemHandler.create)
 
 router.route(ROOT_PATH + ID_PATH)
+  .all(InvoiceItemHandler.checkAuthorization)
   .get(InvoiceItemHandler.getOne)
   .patch(InvoiceItemHandler.merge)
   .put(InvoiceItemHandler.update)

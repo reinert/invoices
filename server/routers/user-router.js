@@ -1,5 +1,5 @@
 const express = require('express')
-const { UserHandler } = require('../handlers')
+const { AuthHandler, UserHandler } = require('../handlers')
 
 const ID_PARAM = UserHandler.ID_PARAM
 const ID_PATH = `/:${ID_PARAM}([0-9]+)`
@@ -10,13 +10,14 @@ router.use(UserHandler.retrieveOptions)
 router.param(ID_PARAM, UserHandler.retrieveEntity)
 
 router.route('/')
-  .get(UserHandler.getAll)
+  .get(AuthHandler.requireAdmin, UserHandler.getAll)
   .post(UserHandler.retrievePassword, UserHandler.create)
 
 router.route(ID_PATH)
+  .all(AuthHandler.requireIdentity)
   .get(UserHandler.getOne)
   .patch(UserHandler.retrievePassword, UserHandler.merge)
   .put(UserHandler.update)
-  .delete(UserHandler.delete)
+  .delete(AuthHandler.requireAdmin, UserHandler.delete)
 
 module.exports = router

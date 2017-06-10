@@ -18,6 +18,7 @@ router.route('/')
   .post(InvoiceHandler.create)
 
 router.route(ID_PATH)
+  .all(InvoiceHandler.checkAuthorization)
   .get(InvoiceHandler.getOne)
   .patch(InvoiceHandler.merge)
   .put(InvoiceHandler.update)

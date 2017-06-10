@@ -2,9 +2,23 @@ const { ApiError } = require('../errors')
 const HttpStatus = require('http-status')
 const jwt = require('jsonwebtoken')
 const { Repository } = require('../../db')
-const { User } = require('../../core')
+const { User, UserRole } = require('../../core')
 
 class AuthHandler {
+  static requireIdentity (req, res, next) {
+    if (req.user.id !== req.entity.id) {
+      return next(new ApiError(HttpStatus.UNAUTHORIZED))
+    }
+    next()
+  }
+
+  static requireAdmin (req, res, next) {
+    if (req.user.role !== UserRole.ADMIN) {
+      return next(new ApiError(HttpStatus.UNAUTHORIZED))
+    }
+    next()
+  }
+
   static signin (req, res, next) {
     const email = req.get('email')
     if (!email || !req.password) {
@@ -31,10 +45,14 @@ class AuthHandler {
 
           const secret = process.env.JWT_SECRET
           const options = { expiresIn: '1d' }
-          const token = jwt.sign({ id: user.id }, secret, options)
+          const token =
+            jwt.sign({ id: user.id, role: user.role }, secret, options)
 
           res.set({ 'x-access-token': token })
-          res.cookie('token', token, { httpOnly: true, maxAge: 60000 * 60 * 24 })
+
+          const cookieOptions = { httpOnly: true, maxAge: 60000 * 60 * 24 }
+          res.cookie('token', token, cookieOptions)
+
           res.status(HttpStatus.OK).json(user)
         })
       })
