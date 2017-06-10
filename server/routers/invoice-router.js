@@ -1,5 +1,4 @@
 const express = require('express')
-const expressJwt = require('express-jwt')
 const { InvoiceHandler } = require('../handlers')
 const invoiceItemRouter = require('./invoice-item-router')
 
@@ -7,8 +6,6 @@ const ID_PARAM = InvoiceHandler.ID_PARAM
 const ID_PATH = `/:${ID_PARAM}([0-9]+)`
 
 const router = express.Router()
-
-router.use(expressJwt({ secret: process.env.JWT_SECRET }))
 
 router.use(invoiceItemRouter)
 
