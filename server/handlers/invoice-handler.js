@@ -17,6 +17,12 @@ class InvoiceHandler extends ResourceHandler(Invoice, 'id') {
   }
 
   // @override
+  static getAll (req, res, next) {
+    req.options.where = { user_id: req.user.id }
+    super.getAll(req, res, next)
+  }
+
+  // @override
   static create (req, res, next) {
     if (req.body.type === 'DETAILED') {
       req.options.include = [ 'items' ]
