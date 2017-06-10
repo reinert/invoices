@@ -35,7 +35,7 @@ class AuthHandler {
 
           res.set({ 'x-access-token': token })
           res.cookie('token', token, { httpOnly: true, maxAge: 60000 * 60 * 24 })
-          res.sendStatus(HttpStatus.OK)
+          res.status(HttpStatus.OK).json(user)
         })
       })
       .catch(next)
