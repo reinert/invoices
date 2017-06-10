@@ -1,6 +1,7 @@
 const { Repository } = require('./db')
 const {
   User,
+  UserRole,
   DetailedInvoice,
   SimpleInvoice,
   Invoice
@@ -19,6 +20,7 @@ function setup () {
     case 'development':
       return Repository.sync({ force: true })
         .then(() => john.setPassword('123456'))
+        .then((john) => john.setRole(UserRole.ADMIN))
         .then((john) => Repository.save(john))
         .then((user) => { john = user })
         .then(() => Repository.save(new DetailedInvoice({

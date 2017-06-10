@@ -40,6 +40,11 @@ const UserModel = datasource.define('user', {
   lastName: {
     type: Sequelize.STRING
     // allowNull: false
+  },
+  role: {
+    type: Sequelize.ENUM,
+    values: ['NORMAL', 'ADMIN'],
+    allowNull: false
   }
 })
 
