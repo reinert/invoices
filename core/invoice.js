@@ -1,6 +1,7 @@
+const { Enum } = require('enumify')
 const PersistentEntity = require('./persistent-entity')
 const User = require('./user')
-const { InvalidArgumentException } = require('./errors')
+const { InvalidArgumentError } = require('./errors')
 
 class Invoice extends PersistentEntity {
   static get properties () {
@@ -9,7 +10,7 @@ class Invoice extends PersistentEntity {
         type: User
       },
       'type': {
-        type: String,
+        type: InvoiceType,
         readOnly: true
       },
       'description': {
@@ -36,9 +37,9 @@ class Invoice extends PersistentEntity {
   // Factory method supported by Entity to build entities on an abstract level
   static create (values, options) {
     if (values == null) return null
-    if (values.type === 'SIMPLE') return new SimpleInvoice(values, options)
-    if (values.type === 'DETAILED') return new DetailedInvoice(values, options)
-    throw new InvalidArgumentException('Invoice must have type = ' +
+    if (values.type === InvoiceType.SIMPLE) return new SimpleInvoice(values, options)
+    if (values.type === InvoiceType.DETAILED) return new DetailedInvoice(values, options)
+    throw new InvalidArgumentError('Invoice must have type = ' +
       '{SIMPLE | DETAILED}, otherwise is invalid.', values)
   }
 
@@ -52,7 +53,7 @@ class SimpleInvoice extends Invoice {
   static get properties () {
     return {
       'type': {
-        value: 'SIMPLE'
+        value: InvoiceType.SIMPLE
       },
       'amount': {
         value: 0.00
@@ -65,7 +66,7 @@ class DetailedInvoice extends Invoice {
   static get properties () {
     return {
       'type': {
-        value: 'DETAILED'
+        value: InvoiceType.DETAILED
       },
       'amount': {
         value: 0.00,
@@ -136,4 +137,30 @@ class InvoiceItem extends PersistentEntity {
   }
 }
 
-module.exports = { Invoice, SimpleInvoice, DetailedInvoice, InvoiceItem }
+class InvoiceType extends Enum {
+  static create (value) {
+    if (value == null) return
+    if (value instanceof InvoiceType) return value
+    if (value === 'SIMPLE' || value == 0) {
+      return InvoiceType.SIMPLE
+    }
+    if (value === 'DETAILED' || value == 1) {
+      return InvoiceType.DETAILED
+    }
+    throw new InvalidArgumentError(`Invalid InvoiceType '${value}'` +
+      `It should be 'SIMPLE' (0) or 'DETAILED' (1).`)
+  }
+
+  toString () {
+    return this.name
+  }
+
+  value () {
+    return this.ordinal
+  }
+}
+
+InvoiceType.initEnum(['SIMPLE', 'DETAILED'])
+
+module.exports = { Invoice, SimpleInvoice, DetailedInvoice, InvoiceItem,
+  InvoiceType }

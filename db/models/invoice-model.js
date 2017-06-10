@@ -1,12 +1,19 @@
 const Sequelize = require('sequelize')
 const datasource = require('../datasource')
 const UserModel = require('./user-model')
+const { InvoiceType } = require('../../core')
 
 const InvoiceModel = datasource.define('invoice', {
   type: {
-    type: Sequelize.ENUM,
-    values: ['SIMPLE', 'DETAILED'],
-    allowNull: false
+    type: Sequelize.INTEGER,
+    allowNull: false,
+    set: function (value) {
+      if (value instanceof InvoiceType) value = value.value()
+      this.setDataValue('type', value)
+    },
+    get: function () {
+      return InvoiceType.create(this.getDataValue('type'))
+    }
   },
   amount: {
     type: Sequelize.DECIMAL(10, 2),
@@ -64,14 +71,14 @@ InvoiceModel.addHook('afterUpdate', restoreAmount)
 InvoiceModel.addHook('afterFind', setUserById)
 
 function excludeAmount (instance, options) {
-  if (instance.type === 'DETAILED') {
+  if (instance.type === 2) {
     options.fields.splice(options.fields.indexOf('amount'), 1)
     instance._previousAmount = instance.amount
   }
 }
 
 function restoreAmount (instance, options) {
-  if (instance.type === 'DETAILED') {
+  if (instance.type === 2) {
     instance.amount = instance._previousAmount
   }
 }

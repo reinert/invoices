@@ -6,7 +6,8 @@ const {
   Invoice,
   SimpleInvoice,
   DetailedInvoice,
-  InvoiceItem
+  InvoiceItem,
+  InvoiceType
 } = require('./invoice')
 
 module.exports = {
@@ -17,5 +18,6 @@ module.exports = {
   Invoice,
   SimpleInvoice,
   DetailedInvoice,
-  InvoiceItem
+  InvoiceItem,
+  InvoiceType
 }
