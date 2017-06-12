@@ -6,7 +6,7 @@ const { User, UserRole } = require('../../core')
 
 class AuthHandler {
   static requireIdentity (req, res, next) {
-    if (req.user.id !== req.entity.id) {
+    if (req.user.role !== UserRole.ADMIN && req.user.id !== req.entity.id) {
       return next(new ApiError(HttpStatus.UNAUTHORIZED))
     }
     next()
@@ -23,7 +23,8 @@ class AuthHandler {
     const email = req.get('email')
     if (!email || !req.password) {
       if (req.user) {
-        return res.status(HttpStatus.OK).json(req.user)
+        return Repository.find(User, { pk: { id: req.user.id } })
+          .then((user) => res.status(HttpStatus.OK).json(user))
       }
       return next(new ApiError(HttpStatus.BAD_REQUEST))
     }
@@ -45,8 +46,8 @@ class AuthHandler {
 
           const secret = process.env.JWT_SECRET
           const options = { expiresIn: '1d' }
-          const token =
-            jwt.sign({ id: user.id, role: user.role }, secret, options)
+          const tokenData = { id: user.id, role: user.role }
+          const token = jwt.sign(tokenData, secret, options)
 
           res.set({ 'x-access-token': token })
 
