@@ -8,7 +8,8 @@ class Invoice extends PersistentEntity {
   static get properties () {
     return {
       'user': {
-        type: User
+        type: User,
+        readOnly: true
       },
       'type': {
         type: String,
