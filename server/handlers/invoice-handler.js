@@ -3,9 +3,9 @@ const HttpStatus = require('http-status')
 const { Invoice, InvoiceItem } = require('../../core')
 const ResourceHandler = require('./resource-handler')
 
-class InvoiceHandler extends ResourceHandler(Invoice, 'id') {
+class InvoiceHandler extends ResourceHandler(Invoice) {
   static checkAuthorization (req, res, next) {
-    if (req.entity.user.id !== req.user.id) {
+    if (req.invoice.user.id !== req.user.id) {
       return next(new ApiError(HttpStatus.UNAUTHORIZED))
     }
 

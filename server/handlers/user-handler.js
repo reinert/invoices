@@ -8,7 +8,7 @@ const B64_REGEX = new RegExp(
   '^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$'
 )
 
-class UserHandler extends ResourceHandler(User, 'id') {
+class UserHandler extends ResourceHandler(User) {
   static retrievePassword (req, res, next) {
     let b64Password = req.get('encp')
 
@@ -46,10 +46,10 @@ class UserHandler extends ResourceHandler(User, 'id') {
 
   // @override
   static merge (req, res, next) {
-    req.entity.merge(req.body)
+    req.user.merge(req.body)
 
-    return (req.password ? req.entity.setPassword(req.password)
-                         : Promise.resolve(req.entity))
+    return (req.password ? req.user.setPassword(req.password)
+                         : Promise.resolve(req.user))
       .then(user => Repository.save(user))
       .then(user => res.json(user))
       .catch(next)

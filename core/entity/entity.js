@@ -5,6 +5,11 @@ const Holder = require('./holder')
 
 class Entity extends EventEmitter {
   static coerce (value, type, options) {
+    if (typeof type === 'string') {
+      // type argument is actually a property of this Entity
+      type = this.metadata.getType(type)
+    }
+
     return this.coercer.coerce(value, type, options)
   }
 

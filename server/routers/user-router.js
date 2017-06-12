@@ -6,8 +6,8 @@ const ID_PATH = `/:${ID_PARAM}([0-9]+)`
 
 const router = express.Router()
 
-router.use(UserHandler.retrieveOptions)
-router.param(ID_PARAM, UserHandler.retrieveEntity)
+router.use(UserHandler.parseOptions)
+router.param(ID_PARAM, UserHandler.retrieveUser)
 
 router.route('/')
   .get(AuthHandler.requireAdmin, UserHandler.getAll)

@@ -9,9 +9,9 @@ const router = express.Router()
 
 router.use(invoiceItemRouter)
 
-router.use(InvoiceHandler.retrieveOptions)
+router.use(InvoiceHandler.parseOptions)
 router.use(InvoiceHandler.processIncludeOption)
-router.param(ID_PARAM, InvoiceHandler.retrieveEntity)
+router.param(ID_PARAM, InvoiceHandler.retrieveInvoice)
 
 router.route('/')
   .get(InvoiceHandler.getAll)

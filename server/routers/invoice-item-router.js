@@ -9,10 +9,9 @@ const ID_PATH = `/:${ID_PARAM}([0-9]+)`
 
 const router = express.Router()
 
-router.use(InvoiceItemHandler.retrieveOptions)
-router.param(PARENT_ID_PARAM, InvoiceItemHandler.retrieveParentId)
+router.use(InvoiceItemHandler.parseOptions)
 router.param(PARENT_ID_PARAM, InvoiceItemHandler.retrieveInvoice)
-router.param(ID_PARAM, InvoiceItemHandler.retrieveEntity)
+router.param(ID_PARAM, InvoiceItemHandler.retrieveInvoiceItem)
 
 router.route(ROOT_PATH)
   .all(InvoiceItemHandler.checkAuthorization)
