@@ -34,6 +34,7 @@ class InvoiceHandler extends ResourceHandler(Invoice, 'id') {
 
   // @override
   static create (req, res, next) {
+    req.body.user = req.user
     if (req.body.type === 'DETAILED') {
       req.options.include = [ 'items' ]
     }
