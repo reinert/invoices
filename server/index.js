@@ -1,4 +1,5 @@
 const cookieParser = require('cookie-parser')
+const cors = require('cors')
 const bodyParser = require('body-parser')
 const express = require('express')
 const expressJwt = require('express-jwt')
@@ -9,11 +10,7 @@ const { sequelizeErrorHandler } = require('./error-handlers')
 const { uncaughtErrorHandler } = require('./error-handlers')
 const { apiErrorHandler } = require('./error-handlers')
 const { ApiError } = require('./errors')
-const {
-  authRouter,
-  userRouter,
-  invoiceRouter
-} = require('./routers')
+const { authRouter, userRouter, invoiceRouter } = require('./routers')
 
 function getToken (req) {
   let token = req.get('Authorization')
@@ -22,10 +19,7 @@ function getToken (req) {
 }
 
 function checkAuth (req, res, next) {
-  if (!req.user) {
-    next(new ApiError(HttpStatus.UNAUTHORIZED))
-  }
-  next()
+  req.user ? next() : next(new ApiError(HttpStatus.UNAUTHORIZED))
 }
 
 function notFoundHandler (req, res, next) {
@@ -34,6 +28,11 @@ function notFoundHandler (req, res, next) {
 
 module.exports = express()
   .use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
+  .use(cors({
+    origin: true,  // this is insecure; must be updated to the production domain
+    credentials: true,
+    optionsSuccessStatus: 200
+  }))
   .use(helmet())
   .use(bodyParser.json({ type: 'application/json' }))
   .use(cookieParser(), expressJwt({
