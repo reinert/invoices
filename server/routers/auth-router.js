@@ -3,7 +3,8 @@ const express = require('express')
 
 const router = express.Router()
 
-router.route('/login')
-  .head(UserHandler.retrievePassword, AuthHandler.login)
+router.route('/')
+  .get(UserHandler.retrievePassword, AuthHandler.signin)
+  .delete(AuthHandler.signout)
 
 module.exports = router

@@ -1,13 +1,28 @@
 ALTER TABLE invoices ALTER COLUMN amount SET DEFAULT 0;
+ALTER TABLE invoices ADD COLUMN items_counter int DEFAULT 0;
 
-CREATE OR REPLACE FUNCTION set_id_on_insert() RETURNS trigger AS $set_id_on_insert$
-    BEGIN
-        IF NEW.id IS NULL THEN
-          NEW.id = (SELECT coalesce(max(id), 0) FROM invoice_items WHERE invoice_id = NEW.invoice_id) + 1;
-        END IF;
-        RETURN NEW;
-    END;
-$set_id_on_insert$ LANGUAGE plpgsql;
+DROP FUNCTION IF EXISTS invoice_item_next(int);
+
+CREATE OR REPLACE FUNCTION invoice_item_next(invoice_id int)
+RETURNS int AS
+$$
+DECLARE
+   next_id int;
+BEGIN
+   UPDATE invoices set items_counter = items_counter + 1 WHERE id = invoice_id
+     RETURNING items_counter INTO next_id;
+   RETURN next_id;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION set_id_on_insert()
+RETURNS TRIGGER AS
+$$
+BEGIN
+   NEW.id = invoice_item_next(NEW.invoice_id);
+   RETURN NEW;
+END
+$$ language 'plpgsql';
 
 DROP TRIGGER IF EXISTS set_id_on_insert_tg ON invoice_item RESTRICT; --[ CASCADE ]
 

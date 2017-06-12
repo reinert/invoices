@@ -1,6 +1,8 @@
 const PersistentEntity = require('./persistent-entity')
-const User = require('./user')
+const { User } = require('./user')
 const { InvalidArgumentException } = require('./errors')
+
+const InvoiceType = { SIMPLE: 'SIMPLE', DETAILED: 'DETAILED' }
 
 class Invoice extends PersistentEntity {
   static get properties () {
@@ -35,9 +37,15 @@ class Invoice extends PersistentEntity {
 
   // Factory method supported by Entity to build entities on an abstract level
   static create (values, options) {
-    if (values == null) return null
-    if (values.type === 'SIMPLE') return new SimpleInvoice(values, options)
-    if (values.type === 'DETAILED') return new DetailedInvoice(values, options)
+    if (values == null) {
+      return null
+    }
+    if (values.type === InvoiceType.SIMPLE) {
+      return new SimpleInvoice(values, options)
+    }
+    if (values.type === InvoiceType.DETAILED) {
+      return new DetailedInvoice(values, options)
+    }
     throw new InvalidArgumentException('Invoice must have type = ' +
       '{SIMPLE | DETAILED}, otherwise is invalid.', values)
   }
@@ -52,7 +60,7 @@ class SimpleInvoice extends Invoice {
   static get properties () {
     return {
       'type': {
-        value: 'SIMPLE'
+        value: InvoiceType.SIMPLE
       },
       'amount': {
         value: 0.00
@@ -65,7 +73,7 @@ class DetailedInvoice extends Invoice {
   static get properties () {
     return {
       'type': {
-        value: 'DETAILED'
+        value: InvoiceType.DETAILED
       },
       'amount': {
         value: 0.00,
@@ -136,4 +144,10 @@ class InvoiceItem extends PersistentEntity {
   }
 }
 
-module.exports = { Invoice, SimpleInvoice, DetailedInvoice, InvoiceItem }
+module.exports = {
+  Invoice,
+  InvoiceType,
+  SimpleInvoice,
+  DetailedInvoice,
+  InvoiceItem
+}

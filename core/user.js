@@ -3,6 +3,8 @@ const PersistentEntity = require('./persistent-entity')
 
 const SALT_ROUNDS = 13
 
+const UserRole = { NORMAL: 'NORMAL', ADMIN: 'ADMIN' }
+
 class User extends PersistentEntity {
   static get properties () {
     return {
@@ -22,8 +24,18 @@ class User extends PersistentEntity {
       },
       'lastName': {
         type: String
+      },
+      'role': {
+        type: String,
+        readOnly: true,
+        value: UserRole.NORMAL
       }
     }
+  }
+
+  setRole (userRole) {
+    this._set('role', userRole, true)
+    return Promise.resolve(this)
   }
 
   setPassword (plainPassword) {
@@ -46,4 +58,4 @@ class User extends PersistentEntity {
   }
 }
 
-module.exports = User
+module.exports = { User, UserRole }

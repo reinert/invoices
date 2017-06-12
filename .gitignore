@@ -3,6 +3,7 @@ dist
 data
 .env
 .idea
+.tern-port
 *~
 *.swp
 *.swo

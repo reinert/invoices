@@ -1,7 +1,17 @@
-const ResourceHandler = require('./resource-handler')
+const ApiError = require('../errors/api-error')
+const HttpStatus = require('http-status')
 const { Invoice, InvoiceItem } = require('../../core')
+const ResourceHandler = require('./resource-handler')
 
 class InvoiceHandler extends ResourceHandler(Invoice, 'id') {
+  static checkAuthorization (req, res, next) {
+    if (req.entity.user.id !== req.user.id) {
+      return next(new ApiError(HttpStatus.UNAUTHORIZED))
+    }
+
+    return next()
+  }
+
   // executed after #retrieveOptions
   static processIncludeOption (req, res, next) {
     if (!req.options.include) return next()
@@ -14,6 +24,12 @@ class InvoiceHandler extends ResourceHandler(Invoice, 'id') {
     }
 
     return next()
+  }
+
+  // @override
+  static getAll (req, res, next) {
+    req.options.where = { user_id: req.user.id }
+    super.getAll(req, res, next)
   }
 
   // @override
