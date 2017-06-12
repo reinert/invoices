@@ -25,7 +25,11 @@ function setup () {
         .then((user) => { john = user })
         .then(() => Repository.save(new DetailedInvoice({
           user: john,
+          description: 'Description',
           invoiceDate: new Date(),
+          invoiceNumber: '123456',
+          beneficiaryName: 'Beneficiary',
+          beneficiaryRegistrationNumber: '12.34.56',
           items: [
               { description: 'A', quantity: 1, unitPrice: 1.00 },
               { description: 'B', quantity: 2, unitPrice: 2.00 },
@@ -34,15 +38,23 @@ function setup () {
         }), { include: [ 'items' ] }))
         .then(() => Repository.save(new SimpleInvoice({
           user: john,
-          amount: 10,
-          invoiceDate: new Date()
+          description: 'Description',
+          invoiceDate: new Date(),
+          invoiceNumber: '123456',
+          beneficiaryName: 'Beneficiary',
+          beneficiaryRegistrationNumber: '12.34.56',
+          amount: 10
         })))
         .then(() => bob.setPassword('123456'))
         .then((bob) => Repository.save(bob))
         .then((user) => { bob = user })
         .then(() => Repository.save(new DetailedInvoice({
           user: bob,
+          description: 'Description',
           invoiceDate: new Date(),
+          invoiceNumber: '123456',
+          beneficiaryName: 'Beneficiary',
+          beneficiaryRegistrationNumber: '12.34.56',
           items: [
             { description: 'i1', quantity: 3, unitPrice: 3.00 },
             { description: 'i2', quantity: 4, unitPrice: 4.00 }
