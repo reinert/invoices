@@ -6,7 +6,7 @@ const { processOptions, lowerFirstLetter } = require('./resource-handler')
 module.exports = (Entity, Parent, options) => {
   options = processOptionsWithParent(Entity, Parent, options)
 
-  return class extends ResourceHandler(Entity, options) {
+  return class SubResourceHandler extends ResourceHandler(Entity, options) {
     static get PARENT_ID_PARAM () { return options.pkParentFkProperty }
 
     // after #parseOptions and before #retrieveEntity
@@ -24,12 +24,11 @@ module.exports = (Entity, Parent, options) => {
       Repository.find(Parent, findOpt)
         .then(entity => {
           if (entity) {
-            req[options.parentReqProperty] = entity
-            next()
-          } else {
-            res.sendStatus(HttpStatus.NOT_FOUND)
+            res.locals[options.parentReqProperty] = entity
+            return next()
           }
-          return null
+
+          return res.sendStatus(HttpStatus.NOT_FOUND)
         })
         .catch(next)
     }
@@ -41,16 +40,15 @@ module.exports = (Entity, Parent, options) => {
       req.options.pk = Object.assign(req.options.pk || {},
         { [options.pkProperty]: id })
 
-      const e = req[options.parentReqProperty][options.relationProperty].find(
-        (item) => item[options.pkProperty] === id
-      )
+      const e = res.locals[options.parentReqProperty][options.relationProperty]
+        .find(item => item[options.pkProperty] === id)
 
       if (!e) {
         return res.sendStatus(HttpStatus.NOT_FOUND)
       }
 
-      req[options.reqProperty] = e
-      next()
+      res.locals[options.reqProperty] = e
+      return next()
     }
 
     // @override
@@ -65,7 +63,22 @@ module.exports = (Entity, Parent, options) => {
     static create (req, res, next) {
       req.body = Object.assign(req.body || {}, req.options.pk)
 
+      // create entity by inserting into parent
+      const i = res.locals[options.parentReqProperty][options.relationProperty]
+        .push(req.body)
+      // make created entity available in response
+      res.locals[options.reqProperty] =
+        res.locals[options.parentReqProperty][options.relationProperty][i]
+
       return super.create(req, res, next)
+    }
+
+    // @override
+    static delete (req, res, next) {
+      let arr = res.locals[options.parentReqProperty][options.relationProperty]
+      arr.splice(arr.indexOf(res.locals[options.reqProperty]), 1)
+
+      return super.delete(req, res, next)
     }
   }
 }

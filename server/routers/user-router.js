@@ -12,6 +12,7 @@ router.param(ID_PARAM, UserHandler.retrieveUser)
 router.route('/')
   .get(AuthHandler.requireAdmin, UserHandler.getAll)
   .post(UserHandler.retrievePassword, UserHandler.create)
+  .all(UserHandler.sendResult)
 
 router.route(ID_PATH)
   .all(AuthHandler.requireIdentity)
@@ -19,5 +20,6 @@ router.route(ID_PATH)
   .patch(UserHandler.retrievePassword, UserHandler.merge)
   .put(UserHandler.update)
   .delete(AuthHandler.requireAdmin, UserHandler.delete)
+  .all(UserHandler.sendResult)
 
 module.exports = router

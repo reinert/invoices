@@ -5,7 +5,7 @@ const ResourceHandler = require('./resource-handler')
 
 class InvoiceHandler extends ResourceHandler(Invoice) {
   static checkAuthorization (req, res, next) {
-    if (req.invoice.user.id !== req.user.id) {
+    if (res.locals.invoice.user.id !== req.user.id) {
       return next(new ApiError(HttpStatus.UNAUTHORIZED))
     }
 
@@ -28,7 +28,9 @@ class InvoiceHandler extends ResourceHandler(Invoice) {
 
   // @override
   static getAll (req, res, next) {
+    // FIXME: This logic should be in SequelizeRepository
     req.options.where = { userId: req.user.id }
+
     super.getAll(req, res, next)
   }
 

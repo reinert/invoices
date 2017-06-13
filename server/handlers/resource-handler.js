@@ -32,54 +32,81 @@ module.exports = (Entity, options) => {
       Repository.find(Entity, req.options)
         .then(entity => {
           if (entity) {
-            req[options.reqProperty] = entity
-            next()
-          } else {
-            res.sendStatus(HttpStatus.NOT_FOUND)
+            res.locals[options.reqProperty] = entity
+            return next()
           }
-          return null
+
+          return res.sendStatus(HttpStatus.NOT_FOUND)
         })
         .catch(next)
     }
 
+    // ultimately called in each request
+    static sendResult (req, res, next) {
+      if (res.locals.result !== undefined) {
+        res.json(res.locals.result)
+      } else {
+        res.sendStatus(HttpStatus.NO_CONTENT)
+      }
+    }
+
     static getAll (req, res, next) {
       Repository.find(Entity, req.options)
-        .then(entities => res.json(entities))
+        .then(entities =>
+          ResourceHandler.setResultAndProceed(res, entities, next))
         .catch(next)
     }
 
     static create (req, res, next) {
-      const entity = typeof Entity.create === 'function'
-        ? Entity.create(req.body) : new Entity(req.body)
+      if (res.locals[options.reqProperty] === undefined) {
+        // TODO: Centralize Entity creation logic
+        res.locals[options.reqProperty] = typeof Entity.create === 'function'
+          ? Entity.create(req.body) : new Entity(req.body)
+      }
 
-      Repository.save(entity, req.options)
-        .then(entity =>
-          res.status(HttpStatus.CREATED)
-            .location(`${req.baseUrl}/${entity[options.pkProperty]}`)
-            .json(entity))
+      Repository.save(res.locals[options.reqProperty], req.options)
+        .then(entity => ResourceHandler.setResult(res, entity))
+        .then(entity => res
+          .status(HttpStatus.CREATED)
+          .location(`${req.baseUrl}/${entity[options.pkProperty]}`))
+        .then(() => next())
         .catch(next)
     }
 
     static getOne (req, res, next) {
-      res.json(req[options.reqProperty])
+      ResourceHandler.setResultAndProceed(res, res.locals[options.reqProperty], next)
     }
 
     static merge (req, res, next) {
-      Repository.save(req[options.reqProperty].merge(req.body), req.options)
-        .then(entity => res.json(entity))
+      res.locals[options.reqProperty].merge(req.body)
+
+      Repository.save(res.locals[options.reqProperty], req.options)
+        .then(entity => ResourceHandler.setResultAndProceed(res, entity, next))
         .catch(next)
     }
 
     static update (req, res, next) {
-      Repository.save(req[options.reqProperty].update(req.body), req.options)
-        .then(entity => res.json(entity))
+      res.locals[options.reqProperty].update(req.body)
+
+      Repository.save(res.locals[options.reqProperty], req.options)
+        .then(entity => ResourceHandler.setResultAndProceed(res, entity, next))
         .catch(next)
     }
 
     static delete (req, res, next) {
-      Repository.destroy(req[options.reqProperty], req.options)
-        .then(() => res.sendStatus(HttpStatus.NO_CONTENT))
+      Repository.destroy(res.locals[options.reqProperty], req.options)
+        .then(() => next())
         .catch(next)
+    }
+
+    static setResult (res, result) {
+      res.locals.result = result
+      return result
+    }
+
+    static setResultAndProceed (res, result, next) {
+      this.setResult(res, result)
+      next()
     }
   }
 }

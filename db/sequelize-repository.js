@@ -73,6 +73,7 @@ function proxyArray (Entity, arr) {
 function asEntity (Entity, values) {
   if (!values) return null
 
+  // TODO: Centralize Entity creation logic
   return typeof Entity.create === 'function'
     ? Entity.create(values)
     : new Entity(values)

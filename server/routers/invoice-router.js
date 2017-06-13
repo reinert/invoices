@@ -16,6 +16,7 @@ router.param(ID_PARAM, InvoiceHandler.retrieveInvoice)
 router.route('/')
   .get(InvoiceHandler.getAll)
   .post(InvoiceHandler.create)
+  .all(InvoiceHandler.sendResult)
 
 router.route(ID_PATH)
   .all(InvoiceHandler.checkAuthorization)
@@ -23,5 +24,6 @@ router.route(ID_PATH)
   .patch(InvoiceHandler.merge)
   .put(InvoiceHandler.update)
   .delete(InvoiceHandler.delete)
+  .all(InvoiceHandler.sendResult)
 
 module.exports = router

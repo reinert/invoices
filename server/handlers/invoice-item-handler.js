@@ -10,9 +10,16 @@ const opt = {
 class InvoiceItemHandler
     extends SubResourceHandler(InvoiceItem, Invoice, opt) {
   static checkAuthorization (req, res, next) {
-    if (req.invoice.user.id !== req.user.id) {
+    if (res.locals.invoice.user.id !== req.user.id) {
       return next(new ApiError(HttpStatus.UNAUTHORIZED))
     }
+
+    next()
+  }
+
+  // @override
+  static setInvoiceAmountHeader (req, res, next) {
+    res.set('invoice-amount', res.locals.invoice.amount)
 
     next()
   }

@@ -34,24 +34,21 @@ class UserHandler extends ResourceHandler(User) {
       return next(new ApiError(message, HttpStatus.BAD_REQUEST))
     }
 
-    let user = new User(req.body)
-    user.setPassword(req.password)
-      .then(user => Repository.save(user))
-      .then(user =>
-        res.status(HttpStatus.CREATED)
-          .location(`${req.baseUrl}/${user.id}`)
-          .json(user))
+    res.locals.user = new User(req.body)
+    res.locals.user.setPassword(req.password)
+      .then(() => super.create(req, res, next))
       .catch(next)
   }
 
+  // TODO: remove
   // @override
   static merge (req, res, next) {
-    req.user.merge(req.body)
+    res.locals.user.merge(req.body)
 
-    return (req.password ? req.user.setPassword(req.password)
-                         : Promise.resolve(req.user))
+    return (req.password ? res.locals.user.setPassword(req.password)
+                         : Promise.resolve(res.locals.user))
       .then(user => Repository.save(user))
-      .then(user => res.json(user))
+      .then(user => UserHandler.setResultAndProceed(res, user, next))
       .catch(next)
   }
 }
