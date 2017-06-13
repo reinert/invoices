@@ -102,7 +102,7 @@ class Entity extends EventEmitter {
     const oldValue = this._holder.get(property)
 
     if (newValue === oldValue) return
-    this._holder.set(property, newValue)
+    setInHolder(this._holder, property, newValue)
     const skipNotification = options.skipNotification || options.isDefault
     if (this.__mustNotify(property) && !skipNotification) {
       this.emit(`${property}Changed`, newValue, oldValue)
@@ -179,6 +179,7 @@ function processInstance (entity, values, options) {
   const meta = entity.constructor.metadata
   const isValuesHolder = isHolder(values)
 
+  // Hide properties inherited from EventEmitter
   Object.defineProperties(entity, {
     'domain': { enumerable: false },
     '_events': { enumerable: false },
@@ -263,7 +264,7 @@ function processInstance (entity, values, options) {
     if (isValuesHolder && values.get(p) !== undefined) {
       // ensure values in holder are coerced
       const v = entity.__coerce(p, values.get(p), { skipNotification: true })
-      values.set(p, v)
+      setInHolder(values, p, v)
     }
   }
 }
@@ -271,6 +272,15 @@ function processInstance (entity, values, options) {
 // Holder duck type check
 function isHolder (obj) {
   return typeof obj.set === 'function' && typeof obj.get === 'function'
+}
+
+function setInHolder (holder, property, value) {
+  // [WORKAROUND] Integrate with Sequelize properly
+  if (typeof holder.setDataValue === 'function') {
+    holder.setDataValue(property, value)
+  } else {
+    holder.set(property, value)
+  }
 }
 
 module.exports = Entity
