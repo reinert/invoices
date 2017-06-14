@@ -20,6 +20,15 @@ module.exports = (metadata) => {
 
   let meta = metadata.parent ? metadata.parent.metadata : null
   while (meta != null) {
+    ResourceHandler[meta.parseIdMethod] = function (req, res, next, id) {
+      try {
+        this.parseId(req, id)
+        next()
+      } catch (e) {
+        next(e)
+      }
+    }.bind(meta)
+
     ResourceHandler[meta.retrieveMethod] = function (req, res, next, id) {
       this.retrieve(req, res, id)
         .then(entity => {
@@ -70,6 +79,11 @@ function createHandlerPrototype (metadata) {
 
     static getAll (req, res, next) {
       if (req.options.pk) {
+        if (hasParent(res, metadata)) {
+          Handler.setResultAndProceed(res, getParentArray(res, metadata), next)
+          return
+        }
+
         // get all from parent
         req.options.where =
           Object.assign(req.options.where || {}, req.options.pk)
@@ -102,7 +116,7 @@ function createHandlerPrototype (metadata) {
         .then(entity => Handler.setResult(res, entity))
         .then(entity => res
           .status(HttpStatus.CREATED)
-          .location(`${req.baseUrl}/${entity[metadata.id]}`))
+          .location(`${req.originalUrl}/${entity[metadata.id]}`))
         .then(() => next())
         .catch(next)
     }

@@ -7,6 +7,8 @@ class ResourceMetadata {
     this.id = options.id || 'id'
     this.var = options.var || lowerFirstLetter(Entity.name)
     this.retrieveMethod = options.retrieveMethod || `retrieve${Entity.name}`
+    this.parseIdMethod = options.parseIdMethod ||
+      `parse${Entity.name}${upperFirstLetter(this.id)}`
     this.getInclude = () => null
     if (options.parent) {
       if (options.parent.metadata == null) {
@@ -29,7 +31,7 @@ class ResourceMetadata {
     }
   }
 
-  retrieve (req, res, id, options = {}) {
+  parseId (req, id) {
     id = this.type.coerce(id, this.id)
 
     if (!req.options.pk) req.options.pk = {}
@@ -38,6 +40,12 @@ class ResourceMetadata {
     } else {
       req.options.pk[this.id] = id
     }
+
+    return id
+  }
+
+  retrieve (req, res, id, options = {}) {
+    id = this.parseId(req, id)
 
     if (isParentLocallyAvailable(res, this)) {
       const parentEntity = res.locals[this.parent.metadata.var]
