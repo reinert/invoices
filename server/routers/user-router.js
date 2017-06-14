@@ -1,7 +1,7 @@
 const express = require('express')
 const { AuthHandler, UserHandler } = require('../handlers')
 
-const ID_PARAM = UserHandler.ID_PARAM
+const ID_PARAM = 'id'
 const ID_PATH = `/:${ID_PARAM}([0-9]+)`
 
 const router = express.Router()

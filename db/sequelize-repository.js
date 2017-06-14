@@ -17,6 +17,7 @@ class SequelizeRepository extends Repository {
     processOptions(options, Entity)
     if (options.pk) {
       options.where = Object.assign(options.where || {}, options.pk)
+      delete options.pk
       options.where = humps.decamelizeKeys(options.where)
       return getModel(Entity).findOne(options)
         .then(instance => asEntity(Entity, instance))
@@ -110,6 +111,7 @@ function processOptions (opt, entity) {
 
     if (item == null) continue
 
+    // FIXME: handle nested includes
     if (typeof item === 'string') {
       const meta = typeof entity === 'object'
         ? entity.constructor.metadata
@@ -127,20 +129,24 @@ function processOptions (opt, entity) {
     }
 
     if (isAliasModel(item)) {
-      item.model = getModel(item.model)
+      if (item.model.prototype instanceof Entity) {
+        item.model = getModel(item.model)
+      }
       return
     }
 
     let arg = item.name ? item.name : item.toString()
     throw new InvalidArgumentError(
-      `${arg} is not a valid argument for the include option.` +
-      `It should be either an Entity successor constructor or an alias` +
+      `${arg} is not a valid argument for the include option. ` +
+      `It should be either an Entity successor constructor or an alias ` +
       `object in the form of { model: Entity, as: 'alias' }.`)
   }
 }
 
 function isAliasModel (inclItem) {
-  return typeof inclItem.model === 'function' && typeof inclItem.as === 'string'
+  return typeof inclItem.as === 'string' && (
+      typeof inclItem.model === 'function' || typeof inclItem.model === 'object'
+    )
 }
 
 function isNumeric (v) {

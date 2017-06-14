@@ -2,8 +2,9 @@ const ApiError = require('../errors/api-error')
 const HttpStatus = require('http-status')
 const { Invoice, InvoiceItem } = require('../../core')
 const ResourceHandler = require('./resource-handler')
+const ResourceMetadata = require('./resource-metadata')
 
-class InvoiceHandler extends ResourceHandler(Invoice) {
+class InvoiceHandler extends ResourceHandler(new ResourceMetadata(Invoice)) {
   static checkAuthorization (req, res, next) {
     if (res.locals.invoice.user.id !== req.user.id) {
       return next(new ApiError(HttpStatus.UNAUTHORIZED))
@@ -28,7 +29,6 @@ class InvoiceHandler extends ResourceHandler(Invoice) {
 
   // @override
   static getAll (req, res, next) {
-    // FIXME: This logic should be in SequelizeRepository
     req.options.where = { userId: req.user.id }
 
     super.getAll(req, res, next)

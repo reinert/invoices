@@ -2,11 +2,46 @@ const HttpStatus = require('http-status')
 const { Repository } = require('../../db')
 const ApiError = require('../errors/api-error')
 
-module.exports = (Entity, options) => {
-  options = processOptions(Entity, options)
+module.exports = (metadata) => {
+  const ResourceHandler = createHandlerPrototype(metadata)
 
-  return class ResourceHandler {
-    static get ID_PARAM () { return options.pkProperty }
+  ResourceHandler[metadata.retrieveMethod] = function (req, res, next, id) {
+    this.retrieve(req, res, id, req.options)
+      .then(entity => {
+        if (entity) {
+          res.locals[this.var] = entity
+          return next()
+        }
+
+        return res.sendStatus(HttpStatus.NOT_FOUND)
+      })
+      .catch(next)
+  }.bind(metadata)
+
+  let meta = metadata.parent ? metadata.parent.metadata : null
+  while (meta != null) {
+    ResourceHandler[meta.retrieveMethod] = function (req, res, next, id) {
+      this.retrieve(req, res, id)
+        .then(entity => {
+          if (entity) {
+            res.locals[this.var] = entity
+            return next()
+          }
+
+          return res.sendStatus(HttpStatus.NOT_FOUND)
+        })
+        .catch(next)
+    }.bind(meta)
+
+    meta = meta.parent ? meta.parent.metadata : null
+  }
+
+  return ResourceHandler
+}
+
+function createHandlerPrototype (metadata) {
+  return class Handler {
+    static get metadata () { return metadata }
 
     static parseOptions (req, res, next) {
       if (req.query.options) {
@@ -24,23 +59,6 @@ module.exports = (Entity, options) => {
       return next()
     }
 
-    // after #parseOptions
-    static [options.retrieveMethod] (req, res, next, id) {
-      req.options.pk = Object.assign(req.options.pk || {},
-        { [options.pkProperty]: Entity.coerce(id, options.pkProperty) })
-
-      Repository.find(Entity, req.options)
-        .then(entity => {
-          if (entity) {
-            res.locals[options.reqProperty] = entity
-            return next()
-          }
-
-          return res.sendStatus(HttpStatus.NOT_FOUND)
-        })
-        .catch(next)
-    }
-
     // ultimately called in each request
     static sendResult (req, res, next) {
       if (res.locals.result !== undefined) {
@@ -51,50 +69,71 @@ module.exports = (Entity, options) => {
     }
 
     static getAll (req, res, next) {
-      Repository.find(Entity, req.options)
-        .then(entities =>
-          ResourceHandler.setResultAndProceed(res, entities, next))
+      if (req.options.pk) {
+        // get all from parent
+        req.options.where =
+          Object.assign(req.options.where || {}, req.options.pk)
+        delete req.options.pk
+      }
+
+      Repository.find(metadata.type, req.options)
+        .then(entities => Handler.setResultAndProceed(res, entities, next))
         .catch(next)
     }
 
     static create (req, res, next) {
-      if (res.locals[options.reqProperty] === undefined) {
-        // TODO: Centralize Entity creation logic
-        res.locals[options.reqProperty] = typeof Entity.create === 'function'
-          ? Entity.create(req.body) : new Entity(req.body)
+      req.body = Object.assign(req.body || {}, req.options.pk)
+
+      if (res.locals[metadata.var] === undefined) {
+        if (hasParent(res, metadata)) {
+          // create entity by inserting into parent
+          const len = getParentArray(res, metadata).push(req.body)
+          // make created entity available in response
+          setEntity(res, metadata, getParentArray(res, metadata)[len - 1])
+        } else {
+          const Entity = metadata.type
+          // TODO: Centralize Entity creation logic
+          setEntity(res, metadata, typeof metadata.type.create === 'function'
+            ? metadata.type.create(req.body) : new Entity(req.body))
+        }
       }
 
-      Repository.save(res.locals[options.reqProperty], req.options)
-        .then(entity => ResourceHandler.setResult(res, entity))
+      Repository.save(getEntity(res, metadata), req.options)
+        .then(entity => Handler.setResult(res, entity))
         .then(entity => res
           .status(HttpStatus.CREATED)
-          .location(`${req.baseUrl}/${entity[options.pkProperty]}`))
+          .location(`${req.baseUrl}/${entity[metadata.id]}`))
         .then(() => next())
         .catch(next)
     }
 
     static getOne (req, res, next) {
-      ResourceHandler.setResultAndProceed(res, res.locals[options.reqProperty], next)
+      Handler.setResultAndProceed(res, getEntity(res, metadata), next)
     }
 
     static merge (req, res, next) {
-      res.locals[options.reqProperty].merge(req.body)
+      getEntity(res, metadata).merge(req.body)
 
-      Repository.save(res.locals[options.reqProperty], req.options)
-        .then(entity => ResourceHandler.setResultAndProceed(res, entity, next))
+      Repository.save(getEntity(res, metadata), req.options)
+        .then(entity => Handler.setResultAndProceed(res, entity, next))
         .catch(next)
     }
 
     static update (req, res, next) {
-      res.locals[options.reqProperty].update(req.body)
+      getEntity(res, metadata).update(req.body)
 
-      Repository.save(res.locals[options.reqProperty], req.options)
-        .then(entity => ResourceHandler.setResultAndProceed(res, entity, next))
+      Repository.save(getEntity(res, metadata), req.options)
+        .then(entity => Handler.setResultAndProceed(res, entity, next))
         .catch(next)
     }
 
     static delete (req, res, next) {
-      Repository.destroy(res.locals[options.reqProperty], req.options)
+      if (hasParent(res, metadata)) {
+        let arr = getParentArray(res, metadata)
+        arr.splice(arr.indexOf(getEntity(res, metadata)), 1)
+      }
+
+      Repository.destroy(getEntity(res, metadata), req.options)
         .then(() => next())
         .catch(next)
     }
@@ -111,25 +150,23 @@ module.exports = (Entity, options) => {
   }
 }
 
-function processOptions (Entity, options) {
-  const opt = {
-    reqProperty: lowerFirstLetter(Entity.name),
-    pkProperty: 'id',
-    retrieveMethod: `retrieve${Entity.name}`
-  }
-
-  if (options) {
-    if (options.reqProperty) opt.reqProperty = options.reqProperty
-    if (options.pkProperty) opt.pkProperty = options.pkProperty
-    if (options.retrieveMethod) opt.retrieveMethod = options.retrieveMethod
-  }
-
-  return opt
+function hasParent (res, metadata) {
+  return metadata.parent && res.locals[metadata.parent.metadata.var] &&
+    res.locals[metadata.parent.metadata.var][metadata.parent.alias]
 }
 
-function lowerFirstLetter (string) {
-  return string.charAt(0).toLowerCase() + string.slice(1)
+function getParent (res, metadata) {
+  return res.locals[metadata.parent.metadata.var]
 }
 
-module.exports.processOptions = processOptions
-module.exports.lowerFirstLetter = lowerFirstLetter
+function getParentArray (res, metadata) {
+  return getParent(res, metadata)[metadata.parent.alias]
+}
+
+function getEntity (res, metadata) {
+  return res.locals[metadata.var]
+}
+
+function setEntity (res, metadata, value) {
+  res.locals[metadata.var] = value
+}

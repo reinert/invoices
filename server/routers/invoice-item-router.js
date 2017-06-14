@@ -1,8 +1,8 @@
 const express = require('express')
 const { InvoiceItemHandler } = require('../handlers')
 
-const PARENT_ID_PARAM = InvoiceItemHandler.PARENT_ID_PARAM
-const ID_PARAM = InvoiceItemHandler.ID_PARAM
+const PARENT_ID_PARAM = 'invoiceId'
+const ID_PARAM = 'id'
 
 const ROOT_PATH = `/:${PARENT_ID_PARAM}([0-9]+)/items`
 const ID_PATH = `/:${ID_PARAM}([0-9]+)`
