@@ -9,7 +9,7 @@ const InvoiceModel = datasource.define('invoice', {
     allowNull: false
   },
   amount: {
-    type: Sequelize.DECIMAL(10, 2),
+    type: Sequelize.DECIMAL(12, 2),
     allowNull: false,
     defaultValue: 0
   },
@@ -37,7 +37,6 @@ const InvoiceModel = datasource.define('invoice', {
     field: 'user_id',
     type: Sequelize.INTEGER,
     allowNull: false,
-    onDelete: 'CASCADE',
     references: {
       model: UserModel,
       key: 'id'
@@ -55,7 +54,7 @@ const InvoiceModel = datasource.define('invoice', {
       this.setDataValue('user', user)
     }
   }
-})
+}, { schema: 'invoices' })
 
 InvoiceModel.addHook('beforeCreate', excludeAmount)
 InvoiceModel.addHook('beforeUpdate', excludeAmount)

@@ -18,7 +18,7 @@ let bob = new User({ firstName: 'bob', lastName: 'foo', email: 'bob@foo.com' })
 function setup () {
   switch (process.env.NODE_ENV) {
     case 'development':
-      return Repository.sync({ force: true })
+      return Repository.sync()
         .then(() => john.setPassword('123456'))
         .then((john) => john.setRole(UserRole.ADMIN))
         .then((john) => Repository.save(john))
