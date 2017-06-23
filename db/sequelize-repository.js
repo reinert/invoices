@@ -46,10 +46,11 @@ class SequelizeRepository extends Repository {
 
   // @override
   static sync (options) {
-    return datasource.sync(options)
-      .then(() => exec('./db/migrations/invoice-item/set-id-on-insert-trigger.sql'))
-      .then(() => exec('./db/migrations/invoice-item/add-amount-to-invoice-on-upsert-trigger.sql'))
-      .then(() => exec('./db/migrations/invoice-item/subtract-amount-from-invoice-on-delete-trigger.sql'))
+    return exec('./db/migrations/reset-database.sql')
+      .then(() => exec('./db/migrations/users.sql'))
+      .then(() => exec('./db/migrations/invoices.sql'))
+      .then(() => exec('./db/migrations/invoice-items.sql'))
+      .then(() => datasource.sync(options))
   }
 }
 

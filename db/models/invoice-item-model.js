@@ -4,6 +4,7 @@ const InvoiceModel = require('./invoice-model')
 
 const InvoiceItemModel = datasource.define('invoiceItem', {
   // This field is necessary to sequelize understand a double PK
+  /*
   invoice_id: {
     type: Sequelize.INTEGER,
     primaryKey: true,
@@ -22,6 +23,16 @@ const InvoiceItemModel = datasource.define('invoiceItem', {
       return this.setDataValue('invoice_id', id)
     }
   },
+  */
+  invoiceId: {
+    field: 'invoice_id',
+    type: Sequelize.INTEGER,
+    primaryKey: true,
+    references: {
+      model: InvoiceModel,
+      key: 'id'
+    }
+  },
   invoice: {
     type: Sequelize.VIRTUAL,
     set: function (invoice) {
@@ -35,12 +46,12 @@ const InvoiceItemModel = datasource.define('invoiceItem', {
     primaryKey: true
   },
   quantity: {
-    type: Sequelize.DECIMAL(10, 2),
+    type: Sequelize.DECIMAL(12, 2),
     allowNull: false
   },
   unitPrice: {
     field: 'unit_price',
-    type: Sequelize.DECIMAL(10, 2),
+    type: Sequelize.DECIMAL(12, 2),
     allowNull: false
   },
   description: {
@@ -49,7 +60,7 @@ const InvoiceItemModel = datasource.define('invoiceItem', {
   amount: {
     type: Sequelize.VIRTUAL
   }
-})
+}, { schema: 'invoices' })
 
 InvoiceModel.hasMany(InvoiceItemModel, { as: 'items' })
 

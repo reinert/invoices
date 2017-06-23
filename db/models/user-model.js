@@ -22,6 +22,7 @@ const UserModel = datasource.define('user', {
     }
   },
   isEncrypted: {
+    field: 'encrypted',
     type: Sequelize.BOOLEAN,
     defaultValue: false,
     validate: {
@@ -34,18 +35,21 @@ const UserModel = datasource.define('user', {
     }
   },
   firstName: {
+    field: 'first_name',
     type: Sequelize.STRING,
     allowNull: false
   },
   lastName: {
+    field: 'last_name',
     type: Sequelize.STRING
     // allowNull: false
   },
   role: {
     type: Sequelize.ENUM,
     values: ['NORMAL', 'ADMIN'],
-    allowNull: false
+    allowNull: false,
+    defaultValue: 'NORMAL'
   }
-})
+}, { schema: 'auth' })
 
 module.exports = UserModel
