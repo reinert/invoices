@@ -3,12 +3,13 @@ const HttpStatus = require('http-status')
 const { Repository } = require('../../db')
 const ResourceHandler = require('./resource-handler')
 const { User } = require('../../core')
+const ResourceMetadata = require('./resource-metadata')
 
 const B64_REGEX = new RegExp(
   '^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$'
 )
 
-class UserHandler extends ResourceHandler(User, 'id') {
+class UserHandler extends ResourceHandler(new ResourceMetadata(User)) {
   static retrievePassword (req, res, next) {
     let b64Password = req.get('encp')
 
@@ -34,24 +35,21 @@ class UserHandler extends ResourceHandler(User, 'id') {
       return next(new ApiError(message, HttpStatus.BAD_REQUEST))
     }
 
-    let user = new User(req.body)
-    user.setPassword(req.password)
-      .then(user => Repository.save(user))
-      .then(user =>
-        res.status(HttpStatus.CREATED)
-          .location(`${req.baseUrl}/${user.id}`)
-          .json(user))
+    res.locals.user = new User(req.body)
+    res.locals.user.setPassword(req.password)
+      .then(() => super.create(req, res, next))
       .catch(next)
   }
 
+  // TODO: remove
   // @override
   static merge (req, res, next) {
-    req.entity.merge(req.body)
+    res.locals.user.merge(req.body)
 
-    return (req.password ? req.entity.setPassword(req.password)
-                         : Promise.resolve(req.entity))
+    return (req.password ? res.locals.user.setPassword(req.password)
+                         : Promise.resolve(res.locals.user))
       .then(user => Repository.save(user))
-      .then(user => res.json(user))
+      .then(user => UserHandler.setResultAndProceed(res, user, next))
       .catch(next)
   }
 }

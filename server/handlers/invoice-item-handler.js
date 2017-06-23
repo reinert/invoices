@@ -1,31 +1,30 @@
 const ApiError = require('../errors/api-error')
 const HttpStatus = require('http-status')
-const { Repository } = require('../../db')
-const SubResourceHandler = require('./sub-resource-handler')
+const ResourceHandler = require('./resource-handler')
 const { Invoice, InvoiceItem } = require('../../core')
+const ResourceMetadata = require('./resource-metadata')
 
-class InvoiceItemHandler
-    extends SubResourceHandler(InvoiceItem, 'id', 'invoiceId') {
+const metadata = new ResourceMetadata(InvoiceItem, {
+  parent: {
+    metadata: new ResourceMetadata(Invoice),
+    alias: 'items',
+    eager: true
+  }
+})
+
+class InvoiceItemHandler extends ResourceHandler(metadata) {
   static checkAuthorization (req, res, next) {
-    if (req.invoice.user.id !== req.user.id) {
+    if (res.locals.invoice.user.id !== req.user.id) {
       return next(new ApiError(HttpStatus.UNAUTHORIZED))
     }
 
     next()
   }
 
-  static retrieveInvoice (req, res, next) {
-    Repository.find(Invoice, { pk: { id: req.options.pk.invoiceId } })
-      .then(invoice => {
-        if (invoice) {
-          req.invoice = invoice
-          next()
-        } else {
-          res.sendStatus(HttpStatus.NOT_FOUND)
-        }
-        return null
-      })
-      .catch(next)
+  static setInvoiceAmountHeader (req, res, next) {
+    res.set('invoice-amount', res.locals.invoice.amount)
+
+    next()
   }
 }
 

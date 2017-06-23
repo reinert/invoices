@@ -6,6 +6,10 @@ class Coercer {
   coerce (value, Type, options = {}) {
     if (value == null) return value
 
+    if (typeof Type !== 'function') {
+      throw new TypeError('Type argument must be a function.')
+    }
+
     switch (Type) {
       case String: return this.toString(value)
       case Number: return this.toNumber(value)
@@ -17,7 +21,7 @@ class Coercer {
   }
 
   toArray (value, options) {
-    if (!Array.isArray(value)) throw new TypeError(`${value} is not an array`)
+    if (!Array.isArray(value)) throw new TypeError(`${value} is not an array.`)
 
     const GenericType = options.genericType
     const itemObserver = options.itemObserver
