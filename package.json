@@ -13,7 +13,7 @@
     "lint": "standard --fix"
   },
   "dependencies": {
-    "bcrypt": "^1.0.2",
+    "bcrypt": "^3.0.0",
     "body-parser": "^1.17.1",
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.3",
@@ -23,18 +23,18 @@
     "helmet": "^3.5.0",
     "http-status": "^1.0.1",
     "humps": "^2.0.0",
-    "jsonwebtoken": "^7.3.0",
+    "jsonwebtoken": "^8.3.0",
     "morgan": "^1.8.1",
     "pg": "^6.2.2",
     "pg-native": "^1.10.1",
     "sequelize": "^3.30.4",
-    "sqlite3": "^3.1.8"
+    "sqlite3": "^4.0.2"
   },
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "cross-env": "^3.2.4",
-    "mocha": "^3.2.0",
+    "mocha": "^5.2.0",
     "mockery": "^2.0.0",
     "nodemon": "^1.11.0",
     "sinon": "^2.1.0",

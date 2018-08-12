@@ -39,7 +39,7 @@ END
 $$ LANGUAGE 'plpgsql';
 
 CREATE TRIGGER set_invoice_item_id_on_insert_tg BEFORE INSERT ON invoice_items
-  FOR EACH ROW EXECUTE PROCEDURE set_id_on_insert ();
+  FOR EACH ROW EXECUTE PROCEDURE set_invoice_item_id_on_insert ();
 
 --[ Updates parent invoice amount on item insert or update ]--
 CREATE FUNCTION add_amount_to_invoice_on_upsert ()
