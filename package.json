@@ -1,15 +1,15 @@
 {
-  "name": "node-app",
+  "name": "invoices",
   "version": "0.0.1",
-  "description": "just a test",
-  "author": "Danilo Reinert",
+  "description": "personal invoices management",
+  "author": "Danilo Reinert & Daniel Bastos Moraes",
   "license": "BSD",
   "main": "dist/index.js",
   "scripts": {
-    "start": "cross-env NODE_ENV=development node index.js",
-    "start:dev": "cross-env NODE_ENV=development nodemon --inspect index.js --exec \"node\"",
-    "start:prod": "cross-env NODE_ENV=production node index.js",
-    "test": "standard && cross-env NODE_ENV=test mocha --recursive",
+    "start": "cross-env NODE_ENV=development node src/app/index.js",
+    "start:dev": "cross-env NODE_ENV=development nodemon --inspect src/app/index.js --exec \"node\"",
+    "start:prod": "cross-env NODE_ENV=production src/app/node index.js",
+    "test": "standard && cross-env NODE_ENV=test mocha src/test --recursive",
     "lint": "standard --fix"
   },
   "dependencies": {

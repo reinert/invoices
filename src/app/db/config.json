@@ -2,11 +2,11 @@
   "development": {
     "dialect": "postgres",
     "native": true,
-    "username": "invoices",
-    "password": "invoices",
-    "host": "localhost",
+    "username": "postgres",
+    "password": "postgres",
+    "host": "db",
     "database": "invoices_dev",
-    "port": 5433,
+    "port": 5432,
     "define": {
       "underscored": true,
       "underscoredAll": true
@@ -15,11 +15,11 @@
   "test": {
     "dialect": "postgres",
     "native": true,
-    "username": "invoices",
-    "password": "invoices",
+    "username": "postgres",
+    "password": null,
     "host": "localhost",
     "database": "invoices_test",
-    "port": 5433,
+    "port": 5432,
     "define": {
       "underscored": true,
       "underscoredAll": true
@@ -28,11 +28,11 @@
   "production": {
     "dialect": "postgres",
     "native": true,
-    "username": "invoices",
-    "password": "invoices",
+    "username": "postgres",
+    "password": null,
     "host": "localhost",
     "database": "invoices",
-    "port": 5433,
+    "port": 5432,
     "define": {
       "underscored": true,
       "underscoredAll": true

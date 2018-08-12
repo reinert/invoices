@@ -46,10 +46,10 @@ class SequelizeRepository extends Repository {
 
   // @override
   static sync (options) {
-    return exec('./db/migrations/reset-database.sql')
-      .then(() => exec('./db/migrations/users.sql'))
-      .then(() => exec('./db/migrations/invoices.sql'))
-      .then(() => exec('./db/migrations/invoice-items.sql'))
+    return exec('./src/app/db/migrations/reset-database.sql')
+      .then(() => exec('./src/app/db/migrations/users.sql'))
+      .then(() => exec('./src/app/db/migrations/invoices.sql'))
+      .then(() => exec('./src/app/db/migrations/invoice-items.sql'))
       .then(() => datasource.sync(options))
   }
 }

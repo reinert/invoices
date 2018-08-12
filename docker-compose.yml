@@ -1,0 +1,28 @@
+version: '2'
+services:
+  web:
+    build: .
+    volumes:
+      - ./src/app:/usr/src/app/
+      - node_modules:/usr/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      DATASOURCE_CONFIG: ${DATASOURCE_CONFIG}
+      SERVER_CONFIG: ${SERVER_CONFIG} 
+      POSTGRES_PASSWORD: postgres
+    command: ["./wait-for-postgres.sh", "db", "--", "npm", "start"]
+    #command: /bin/sh
+    #stdin_open: true
+    #tty: true
+  db:
+    image: postgres:alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: invoices_dev
+volumes:
+  node_modules:
